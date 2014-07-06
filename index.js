@@ -21,21 +21,21 @@ function GremlinClient(port, host) {
   // Open websocket connection
   this.ws = new WebSocket('ws://'+ this.host +':'+ this.port);
 
-  this.ws.on('open', this.onConnect.bind(this));
+  this.ws.onopen = this.onOpen.bind(this);
 
   this.ws.onerror = function(e) {
     console.log("Error:", e);
   };
 
-  this.ws.on('message', this.handleMessage.bind(this));
+  this.ws.onmessage = this.onMessage.bind(this);
 
-  this.ws.on('close', this.onClose.bind(this));
+  this.ws.onclose = this.onClose.bind(this);
 }
 
 inherits(GremlinClient, EventEmitter);
 
-GremlinClient.prototype.handleMessage = function(data, flags) {
-  var message = JSON.parse(data);
+GremlinClient.prototype.onMessage = function(data, flags) {
+  var message = JSON.parse(data.data || data);
   var command = this.commands[message.requestId];
 
   if (message.type === 0) {
@@ -48,15 +48,15 @@ GremlinClient.prototype.handleMessage = function(data, flags) {
   }
 };
 
-GremlinClient.prototype.onConnect = function() {
+GremlinClient.prototype.onOpen = function() {
   this.connected = true;
   this.emit('connect');
 
   this.executeQueue();
 };
 
-GremlinClient.prototype.onClose = function() {
-  console.log("WebSocket closed");
+GremlinClient.prototype.onClose = function(code) {
+  console.log("WebSocket closed", code);
 };
 
 GremlinClient.prototype.executeQueue = function() {
