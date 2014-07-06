@@ -3,7 +3,21 @@ gremlin-client
 
 A proof of concept WebSocket JavaScript client for TinkerPop3 Gremlin Server.
 
-Tested with Node.js v0.10.29 and v0.11.13. May work in the browser with browserify.
+Tested with Node.js v0.10.29 and v0.11.13.
+Tested with Chrome 35, Firefox 28, Safari 7.
+
+## Installation
+
+Gremlin Client is an AMD/CommonJS module that works in both Node.js and WebSocket enabled browsers.
+
+```
+npm install gremlin-client --save
+```
+
+In the browser, you can require the module with browserify or directly insert a `<script>` tag, which will expose a global `gremlin` variable:
+```html
+<script type="text/javascript" src="gremlin.js"></script>
+```
 
 ## Usage
 
@@ -48,6 +62,21 @@ query.on('end', function(msg) {
 ### Callback mode: client.execute(script, callback)
 
 Will execute the provided callback when all results are actually returned from the server. Until it receives the final `type: 0` message, the client will internally concatenate all partial results returned over different messages.
+
+## Running the Examples
+
+To run the command line example:
+```
+cd examples
+node node-example
+```
+
+To run the browser example:
+```
+cd examples
+node server
+```
+then open http://localhost:3000/examples/gremlin.html
 
 ## Features
 
