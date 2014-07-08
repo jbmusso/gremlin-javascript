@@ -68,7 +68,7 @@ GremlinClient.prototype.executeQueue = function() {
   }
 };
 
-GremlinClient.prototype.queueCommand = function(job) {
+GremlinClient.prototype.buildCommand = function(job) {
   var guid = Guid.create().value;
   var command = {
     message: {
@@ -85,8 +85,6 @@ GremlinClient.prototype.queueCommand = function(job) {
     result: []
   };
 
-  this.commands[guid] = command;
-
   return command;
 };
 
@@ -95,7 +93,7 @@ GremlinClient.prototype.send_message = function(command) {
 };
 
 GremlinClient.prototype.execute = function(script, callback) {
-  var command = this.queueCommand({
+  var command = this.buildCommand({
     script: script,
     onData: function(message) {
       this.result = this.result.concat(message.result);
@@ -111,7 +109,7 @@ GremlinClient.prototype.execute = function(script, callback) {
 GremlinClient.prototype.stream = function(script) {
   var stream = new Stream();
 
-  var command = this.queueCommand({
+  var command = this.buildCommand({
     script: script,
     onData: function(data) {
       stream.emit('data', data);
@@ -131,6 +129,7 @@ GremlinClient.prototype.sendOrEnqueueCommand = function(command) {
   if (this.connected) {
     this.send_message(command);
   } else {
+    this.commands[command.message.requestId] = command;
     this.queue.push(command);
   }
 };
