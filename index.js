@@ -105,11 +105,7 @@ GremlinClient.prototype.execute = function(script, callback) {
     }
   });
 
-  if (this.connected) {
-    this.send_message(command);
-  } else {
-    this.queue.push(command);
-  }
+  this.sendOrEnqueueCommand(command);
 };
 
 GremlinClient.prototype.stream = function(script) {
@@ -126,16 +122,19 @@ GremlinClient.prototype.stream = function(script) {
     }
   });
 
+  this.sendOrEnqueueCommand(command);
+
+  return stream;
+};
+
+GremlinClient.prototype.sendOrEnqueueCommand = function(command) {
   if (this.connected) {
     this.send_message(command);
   } else {
     this.queue.push(command);
   }
-
-  return stream;
 };
 
-
-module.exports.createClient = function (port, host) {
+module.exports.createClient = function(port, host) {
   return new GremlinClient();
 };
