@@ -40,6 +40,7 @@ GremlinClient.prototype.onMessage = function(data, flags) {
 
   if (message.type === 0) {
     message.result = command.result;
+    delete this.commands[message.requestId];
     return command.onEnd(message);
   }
 
@@ -56,7 +57,10 @@ GremlinClient.prototype.onOpen = function() {
 };
 
 GremlinClient.prototype.onClose = function(code) {
-  console.log("WebSocket closed", code);
+  this.terminateCommands({
+    message: 'WebSocket closed',
+    details: code
+  });
 };
 
 GremlinClient.prototype.executeQueue = function() {
@@ -64,8 +68,24 @@ GremlinClient.prototype.executeQueue = function() {
 
   while (this.queue.length > 0) {
     command = this.queue.shift();
-    this.send_message(command);
+    this.sendMessage(command);
   }
+};
+
+GremlinClient.prototype.terminateCommands = function(reason) {
+  var commands = this.commands;
+  var command;
+  var error = new Error(reason.message);
+  error.details = reason.details;
+
+  // Empty queue
+  this.queue.length = 0;
+  this.commands = {};
+
+  Object.keys(commands).forEach(function(key) {
+    command = commands[key];
+    command.terminate(error);
+  });
 };
 
 GremlinClient.prototype.buildCommand = function(script, handlers) {
@@ -82,13 +102,14 @@ GremlinClient.prototype.buildCommand = function(script, handlers) {
     },
     onData: handlers.onData,
     onEnd: handlers.onEnd,
+    terminate: handlers.terminate,
     result: []
   };
 
   return command;
 };
 
-GremlinClient.prototype.send_message = function(command) {
+GremlinClient.prototype.sendMessage = function(command) {
   this.ws.send(JSON.stringify(command.message));
 };
 
@@ -100,6 +121,9 @@ GremlinClient.prototype.execute = function(script, callback) {
     },
     onEnd: function(data) {
       return callback(null, data);
+    },
+    terminate: function(error) {
+      return callback(error);
     }
   });
 
@@ -117,6 +141,9 @@ GremlinClient.prototype.stream = function(script) {
     },
     onEnd: function(data) {
       stream.emit('end', data);
+    },
+    terminate: function(error) {
+      stream.emit('error', error);
     }
   });
 
@@ -127,7 +154,7 @@ GremlinClient.prototype.stream = function(script) {
 
 GremlinClient.prototype.sendOrEnqueueCommand = function(command) {
   if (this.connected) {
-    this.send_message(command);
+    this.sendMessage(command);
   } else {
     this.commands[command.message.requestId] = command;
     this.queue.push(command);

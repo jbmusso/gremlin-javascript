@@ -13,10 +13,14 @@ client.execute(script, function(err, res) {
 // Stream style
 var s = client.stream(script);
 
-s.on('result', function(d) {
-  console.log(d);
+s.on('result', function(result) {
+  console.log(result);
 });
 
-s.on('end', function(d) {
-  console.log("All results fetched", d);
+s.on('end', function(message) {
+  console.log("All results fetched", message);
+});
+
+s.on('error', function(e) {
+  console.log(e);
 });
