@@ -68,7 +68,7 @@ GremlinClient.prototype.executeQueue = function() {
   }
 };
 
-GremlinClient.prototype.buildCommand = function(job) {
+GremlinClient.prototype.buildCommand = function(script, handlers) {
   var guid = Guid.create().value;
   var command = {
     message: {
@@ -76,12 +76,12 @@ GremlinClient.prototype.buildCommand = function(job) {
       processor: "",
       op: "eval",
       args: {
-        gremlin: job.script,
+        gremlin: script,
         accept: "application/json"
       }
     },
-    onData: job.onData,
-    onEnd: job.onEnd,
+    onData: handlers.onData,
+    onEnd: handlers.onEnd,
     result: []
   };
 
@@ -93,7 +93,7 @@ GremlinClient.prototype.send_message = function(command) {
 };
 
 GremlinClient.prototype.execute = function(script, callback) {
-  var command = this.buildCommand({
+  var command = this.buildCommand(script, {
     script: script,
     onData: function(message) {
       this.result = this.result.concat(message.result);
@@ -109,7 +109,7 @@ GremlinClient.prototype.execute = function(script, callback) {
 GremlinClient.prototype.stream = function(script) {
   var stream = new Stream();
 
-  var command = this.buildCommand({
+  var command = this.buildCommand(script, {
     script: script,
     onData: function(data) {
       stream.emit('data', data);
