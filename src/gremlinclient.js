@@ -9,9 +9,19 @@ var WebSocket = require('ws');
 var Guid = require('guid');
 
 
-function GremlinClient(port, host) {
+function GremlinClient(port, host, options) {
   this.port = port || 8182;
   this.host = host || 'localhost';
+
+  options = options || { // todo: use lodash _.defaults()
+    session: false
+  };
+
+  this.useSession = options.session;
+
+  if (this.useSession) {
+    this.sessionId = Guid.create().value;
+  }
 
   this.connected = false;
   this.queue = [];
@@ -97,7 +107,8 @@ GremlinClient.prototype.buildCommand = function(script, handlers) {
       op: "eval",
       args: {
         gremlin: script,
-        accept: "application/json"
+        accept: "application/json",
+        session: ""
       }
     },
     onData: handlers.onData,
@@ -105,6 +116,11 @@ GremlinClient.prototype.buildCommand = function(script, handlers) {
     terminate: handlers.terminate,
     result: []
   };
+
+  if (this.useSession) {
+    command.message.processor = "session";
+    command.message.args.session = this.sessionId;
+  }
 
   return command;
 };

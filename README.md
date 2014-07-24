@@ -32,6 +32,10 @@ same as:
 var client = gremlin.createClient(8182, 'localhost');
 ```
 
+If you want to use Gremlin-Server sessions, you can set the `session` argument as true in the `options` object:
+```javascript
+var client = gremlin.createClient(8182, 'localhost', { session: true });
+```
 
 The client supports two modes: streaming results, or traditional callback mode.
 
