@@ -7,17 +7,20 @@ var Stream = require('stream').Stream;
 
 var WebSocket = require('ws');
 var Guid = require('guid');
-
+var _ = {
+  defaults: require('lodash.defaults')
+};
 
 function GremlinClient(port, host, options) {
   this.port = port || 8182;
   this.host = host || 'localhost';
 
-  options = options || { // todo: use lodash _.defaults()
+  this.options = _.defaults(options || {}, {
+    language: "gremlin-groovy",
     session: false
-  };
+  });
 
-  this.useSession = options.session;
+  this.useSession = this.options.session;
 
   if (this.useSession) {
     this.sessionId = Guid.create().value;
@@ -98,8 +101,10 @@ GremlinClient.prototype.terminateCommands = function(reason) {
   });
 };
 
-GremlinClient.prototype.buildCommand = function(script, handlers) {
+GremlinClient.prototype.buildCommand = function(script, bindings, handlers) {
   var guid = Guid.create().value;
+  bindings = bindings || {};
+
   var command = {
     message: {
       requestId: guid,
@@ -107,8 +112,9 @@ GremlinClient.prototype.buildCommand = function(script, handlers) {
       op: "eval",
       args: {
         gremlin: script,
+        bindings: bindings,
         accept: "application/json",
-        session: ""
+        language: this.options.language,
       }
     },
     onData: handlers.onData,
@@ -129,9 +135,29 @@ GremlinClient.prototype.sendMessage = function(command) {
   this.ws.send(JSON.stringify(command.message));
 };
 
-GremlinClient.prototype.execute = function(script, callback) {
-  var command = this.buildCommand(script, {
-    script: script,
+/**
+ * Get the inner function body from a function.toString() representation
+ *
+ * @param {Function}
+ * @return {String}
+ */
+GremlinClient.prototype.extractFunctionBody = function(fn) {
+  var body = fn.toString();
+  body = body.substring(body.indexOf("{") + 1, body.lastIndexOf("}"));
+
+  return body;
+};
+
+GremlinClient.prototype.execute = function(script, bindings, callback) {
+  if (typeof script === 'function') {
+    script = this.extractFunctionBody(script);
+  }
+
+  if (typeof bindings === 'function') {
+    callback = bindings;
+  }
+
+  var command = this.buildCommand(script, bindings, {
     onData: function(message) {
       this.result = this.result.concat(message.result);
     },
@@ -146,11 +172,14 @@ GremlinClient.prototype.execute = function(script, callback) {
   this.sendOrEnqueueCommand(command);
 };
 
-GremlinClient.prototype.stream = function(script) {
+GremlinClient.prototype.stream = function(script, bindings) {
+  if (typeof script === 'function') {
+    script = this.extractFunctionBody(script);
+  }
+
   var stream = new Stream();
 
-  var command = this.buildCommand(script, {
-    script: script,
+  var command = this.buildCommand(script, bindings, {
     onData: function(data) {
       stream.emit('data', data);
       stream.emit('result', data.result, data);

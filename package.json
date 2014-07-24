@@ -25,6 +25,7 @@
   "homepage": "https://github.com/gulthor/gremlin-client",
   "dependencies": {
     "guid": "0.0.12",
+    "lodash.defaults": "^2.4.1",
     "ws": "^0.4.31"
   },
   "devDependencies": {
