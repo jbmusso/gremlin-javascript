@@ -12,8 +12,8 @@ describe('Nashorn syntax', function() {
 
     client.execute(script, function(err, response) {
       (err === null).should.be.true;
-      response.result[0].properties.name.should.equal('blueprints');
-      response.result[5].properties.name.should.equal('stephen');
+      response.result[0].properties.name.should.equal('josh');
+      response.result[5].properties.name.should.equal('vadas');
     });
   });
 });
