@@ -32,6 +32,10 @@ same as:
 var client = gremlin.createClient(8182, 'localhost');
 ```
 
+If you want to use Gremlin-Server sessions, you can set the `session` argument as true in the `options` object:
+```javascript
+var client = gremlin.createClient(8182, 'localhost', { session: true });
+```
 
 The client supports two modes: streaming results, or traditional callback mode.
 
@@ -63,7 +67,58 @@ query.on('end', function(msg) {
 
 Will execute the provided callback when all results are actually returned from the server. Until it receives the final `type: 0` message, the client will internally concatenate all partial results returned over different messages.
 
+### Using Gremlin-JavaScript syntax with Nashorn
+
+Providing your configured `nashorn` script engine in your `gremlin-server.yaml` file, you can send and execute Gremlin-JavaScript formatted queries:
+
+```yaml
+scriptEngines: {
+  gremlin-groovy: {
+    imports: [java.lang.Math, org.apache.commons.math3.util.FastMath],
+    staticImports: [java.lang.Math.PI],
+    scripts: [scripts/generate-classic.groovy]},
+  nashorn: {
+      imports: [java.lang.Math, org.apache.commons.math3.util.FastMath],
+      staticImports: [java.lang.Math.PI]}}
+```
+
+Then, in your Node.js/Browser environment:
+
+```javascript
+var client = gremlin.createClient({ language: 'nashorn' });
+
+// Wrap a script definition in a JavaScript function
+var script = function() {
+  // Retrieve all vertices ordered by name
+  g.V().order(function(a, b) {
+    return a.get().value('name').localeCompare(b.get().value('name')); // JavaScript replacement for <=> spaceship operator
+  });
+};
+
+// Send that script function body to Gremlin Server for execution in Nashorn engine
+client.execute(script, function(err, response) {
+  // Handle response.results
+});
+```
+
+The client gets a string representation of the function passed to `client.stream()` or `client.query()` by calling the `.toString()` method.
+
+### Bound parameters
+
+The following example shows how to send a Gremlin-Javascript formatted script to Gremlin Server with bound parameters using the stream API:
+
+```javascript
+var s = client.stream(function() { g.v(id); }, { id: 1 });
+
+s.on('data', function(result) {
+  // handle result
+});
+```
+
 ## Running the Examples
+
+This section assumes that you configured `resultIterationBatchSize: 1` in your Gremlin Server .yaml config file and loaded the default TinkerPop graph with `scripts: [scripts/generate-classic.groovy]`
+
 
 To run the command line example:
 ```
@@ -76,7 +131,7 @@ To run the browser example:
 cd examples
 node server
 ```
-then open http://localhost:3000/examples/gremlin.html
+then open [http://localhost:3000/examples/gremlin.html](http://localhost:3000/examples/gremlin.html) for a demonstration on how a list of 6 vertices is being populated as the vertices are being streamed down from Gremlin Server.
 
 ## Features
 
