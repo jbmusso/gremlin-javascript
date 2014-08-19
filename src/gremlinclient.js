@@ -56,14 +56,15 @@ GremlinClient.prototype.handleMessage = function(event) {
   var message = JSON.parse(event.data || event); // Node.js || Browser API
   var command = this.commands[message.requestId];
 
-  if (message.type === 0) {
-    message.result = command.result;
-    delete this.commands[message.requestId]; // TODO: optimize performance
-    return command.onEnd(message);
-  }
-
-  if (message.type === 1) {
-    command.onData(message);
+  switch (message.code) {
+    case 200:
+      command.onData(message);
+      break;
+    case 299:
+      message.result = command.result;
+      delete this.commands[message.requestId]; // TODO: optimize performance
+      command.onEnd(message);
+      break;
   }
 };
 
