@@ -228,10 +228,11 @@ GremlinClient.prototype.stream = function(script, bindings) {
  * @param {Object} command
  */
 GremlinClient.prototype.sendCommand = function(command) {
+  this.commands[command.message.requestId] = command;
+
   if (this.connected) {
     this.sendMessage(command);
   } else {
-    this.commands[command.message.requestId] = command;
     this.queue.push(command);
   }
 };
