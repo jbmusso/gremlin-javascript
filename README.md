@@ -21,40 +21,45 @@ In the browser, you can require the module with browserify or directly insert a 
 
 ## Usage
 
-### Set-up client
+### Creating a new client
 
 ```javascript
 // Will open a WebSocket to ws://localhost:8182 by default
 var client = gremlin.createClient();
 ```
-same as:
+This is a shorthand for:
 ```javascript
 var client = gremlin.createClient(8182, 'localhost');
 ```
 
-If you want to use Gremlin-Server sessions, you can set the `session` argument as true in the `options` object:
+If you want to use Gremlin Server sessions, you can set the `session` argument as true in the `options` object:
 ```javascript
 var client = gremlin.createClient(8182, 'localhost', { session: true });
 ```
 
+The `options` object currently allows you to set two options:
+* `session`: whether to use sessions or not (default: `false`)
+* `language`: the script engine to use on the server, see your gremlin-server.yaml file (default: `"gremlin-groovy"`)
+
+### Sending scripts to Gremlin Server for execution
 The client supports two modes: streaming results, or traditional callback mode.
 
-### Stream mode: client.stream(script)
+#### Stream mode: client.stream(script)
 
-Return a Node.js stream which emits a `data` event with the raw data returned by Gremlin Server every time it receives a message. The stream simultaneously also emits a higher level `result` event.
+Return a Node.js stream which emits a `data` event with the raw data returned by Gremlin Server every time it receives a message (ie. the raw message returned by Gremlin Server). The stream simultaneously also emits a higher level `result` event, with `message.result` as a payload.
 
-The stream emits an `end` event when receiving the last, `type: 0` message.
+The stream emits an `end` event when the client receives the last `statusCode: 299` message.
 
 ```javascript
 var query = client.stream('g.V()');
 
-query.on('result', function(result) {
-  console.log(result);
+query.on('data', function(message) {
+  console.log(message.result);
 });
 
-// Alternatively:
-// query.on('data', function(message) {
-//   console.log(message.result);
+// Alternatively
+// query.on('result', function(result) {
+//  console.log(result);
 // });
 
 query.on('end', function(msg) {
@@ -63,9 +68,62 @@ query.on('end', function(msg) {
 
 ```
 
-### Callback mode: client.execute(script, callback)
+#### Callback mode: client.execute(script, callback)
 
-Will execute the provided callback when all results are actually returned from the server. Until it receives the final `type: 0` message, the client will internally concatenate all partial results returned over different messages.
+Will execute the provided callback when all results are actually returned from the server.
+
+```javascript
+var client = gremlin.createClient();
+
+client.execute('g.V()', function(err, response) {
+  if (!err) {
+    console.log(response.result)
+  }
+});
+```
+
+The client will internally concatenate all partial results returned over different messages (possibly, depending on the total number of results and the value of `resultIterationBatchSize` set in your .yaml file).
+
+When the client receives the final `statusCode: 299` message, the callback will be executed.
+
+### Adding bound parameters to your scripts
+
+For better performance and security concerns, you may wish to send bound parameters to your scripts.
+
+```javascript
+var client = gremlin.createClient();
+
+client.execute('g.v(id)', { id: 1 }, function(err, response) {
+  // Handle result
+});
+```
+
+### Overriding low level settings on a per request basis
+
+For advanced usage, for example if you wish to set the the `op` or `processor` values, you may wish to override values in the raw message sent to Gremlin Server:
+
+```javascript
+client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, function(err, response) {
+  // Handle result
+});
+```
+
+Because we're not sending any bound parameters, notice how the second argument **must** be set to null so the low level message object is not mistaken with bound arguments.
+
+If you wish to also send bound parameters while overriding the low level message, you can do the following:
+
+```javascript
+client.execute('g.v(id)', { id: 1 }, { args: { language: 'nashorn' }}, function(err, response) {
+  // Handle result
+});
+```
+
+The same method signature also applies to `client.stream()`:
+
+```javascript
+var s = client.stream(script, bindings, message);
+```
+
 
 ### Using Gremlin-JavaScript syntax with Nashorn
 
@@ -74,11 +132,11 @@ Providing your configured `nashorn` script engine in your `gremlin-server.yaml` 
 ```yaml
 scriptEngines: {
   gremlin-groovy: {
-    imports: [java.lang.Math, org.apache.commons.math3.util.FastMath],
+    imports: [java.lang.Math],
     staticImports: [java.lang.Math.PI],
     scripts: [scripts/generate-classic.groovy]},
   nashorn: {
-      imports: [java.lang.Math, org.apache.commons.math3.util.FastMath],
+      imports: [java.lang.Math],
       staticImports: [java.lang.Math.PI]}}
 ```
 
@@ -103,17 +161,7 @@ client.execute(script, function(err, response) {
 
 The client gets a string representation of the function passed to `client.stream()` or `client.query()` by calling the `.toString()` method.
 
-### Bound parameters
-
-The following example shows how to send a Gremlin-Javascript formatted script to Gremlin Server with bound parameters using the stream API:
-
-```javascript
-var s = client.stream(function() { g.v(id); }, { id: 1 });
-
-s.on('data', function(result) {
-  // handle result
-});
-```
+Passing bound parameters and/or low level message will also work when using nashorn script engine.
 
 ## Running the Examples
 
