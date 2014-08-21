@@ -34,18 +34,4 @@ describe('.execute() # nashorn', function() {
       done();
     });
   });
-
-  it('should handle bound parameters', function(done) {
-    var client = gremlin.createClient({ language: 'nashorn' });
-    var script = function() { g.v(id); };
-
-    client.execute(script, { id: 1 }, function(err, response) {
-      (err === null).should.be.true;
-      response.result.length.should.equal(1);
-      var vertex = response.result[0];
-      vertex.id.should.equal(1);
-      vertex.properties.name.should.equal('marko');
-      done();
-    });
-  });
 });

@@ -21,4 +21,34 @@ describe('.exec()', function() {
       });
     });
   });
+
+  it('should handle bound parameters', function(done) {
+    var client = gremlin.createClient();
+
+    client.execute('g.v(id)', { id: 1 }, function(err, response) {
+      (err === null).should.be.true;
+      response.result.length.should.equal(1);
+      done();
+    });
+  });
+
+  it('should handle optional args', function(done) {
+    var client = gremlin.createClient();
+
+    client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, function(err, response) {
+      (err === null).should.be.true;
+      response.result.length.should.equal(1);
+      done();
+    });
+  });
+
+  it('should handle bindings and optional args', function(done) {
+    var client = gremlin.createClient();
+
+    client.execute('g.v(id)', { id : 1 }, { args: { language: 'nashorn' }}, function(err, response) {
+      (err === null).should.be.true;
+      response.result.length.should.equal(1);
+      done();
+    });
+  });
 });
