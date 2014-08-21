@@ -124,23 +124,32 @@ GremlinClient.prototype.cancelPendingCommands = function(reason) {
 /**
  * For a given script string and optional bound parameters, build a command
  * object to be sent to Gremlin Server.
+ *
+ * @param {String} script
+ * @param {Object} bindings
+ * @param {Object} message
+ * @param {Object} handlers
  */
-GremlinClient.prototype.buildCommand = function(script, bindings, handlers) {
+GremlinClient.prototype.buildCommand = function(script, bindings, message, handlers) {
   var guid = Guid.create().value;
   bindings = bindings || {};
 
+  var args = _.defaults(message && message.args || {}, {
+    gremlin: script,
+    bindings: bindings,
+    accept: "application/json",
+    language: this.options.language,
+  });
+
+  message = _.defaults(message || {}, {
+    requestId: guid,
+    processor: "",
+    op: "eval",
+    args: args
+  });
+
   var command = {
-    message: {
-      requestId: guid,
-      processor: "",
-      op: "eval",
-      args: {
-        gremlin: script,
-        bindings: bindings,
-        accept: "application/json",
-        language: this.options.language,
-      }
-    },
+    message: message,
     onData: handlers.onData,
     onEnd: handlers.onEnd,
     terminate: handlers.terminate,
@@ -172,16 +181,24 @@ GremlinClient.prototype.extractFunctionBody = function(fn) {
   return body;
 };
 
-GremlinClient.prototype.execute = function(script, bindings, callback) {
+GremlinClient.prototype.execute = function(script, bindings, message, callback) {
   if (typeof script === 'function') {
     script = this.extractFunctionBody(script);
   }
 
+  // Signature: script, callback
   if (typeof bindings === 'function') {
     callback = bindings;
+    bindings = {};
   }
 
-  var command = this.buildCommand(script, bindings, {
+  // Signature: script, bindings, callback
+  if (typeof message === 'function') {
+    callback = message;
+    message = {};
+  }
+
+  var command = this.buildCommand(script, bindings, message, {
     onData: function(message) {
       this.result = this.result.concat(message.result);
     },
@@ -196,14 +213,18 @@ GremlinClient.prototype.execute = function(script, bindings, callback) {
   this.sendCommand(command);
 };
 
-GremlinClient.prototype.stream = function(script, bindings) {
+GremlinClient.prototype.stream = function(script, bindings, message) {
   if (typeof script === 'function') {
     script = this.extractFunctionBody(script);
   }
 
+  if (typeof message === 'function') {
+    message = {};
+  }
+
   var stream = new Stream();
 
-  var command = this.buildCommand(script, bindings, {
+  var command = this.buildCommand(script, bindings, message, {
     onData: function(data) {
       stream.emit('data', data);
       stream.emit('result', data.result, data);
