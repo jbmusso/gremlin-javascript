@@ -63,7 +63,7 @@ GremlinClient.prototype.handleMessage = function(event) {
     case 299:
       message.result = command.result;
       delete this.commands[message.requestId]; // TODO: optimize performance
-      command.onEnd(message);
+      command.onEnd(message.result, message);
       break;
   }
 };
@@ -202,8 +202,8 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
     onData: function(message) {
       this.result = this.result.concat(message.result);
     },
-    onEnd: function(data) {
-      return callback(null, data);
+    onEnd: function(result, message) {
+      return callback(null, result, message, this);
     },
     terminate: function(error) {
       return callback(error);
@@ -226,11 +226,10 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
 
   var command = this.buildCommand(script, bindings, message, {
     onData: function(data) {
-      stream.emit('data', data);
-      stream.emit('result', data.result, data);
+      stream.emit('data', data.result, data);
     },
-    onEnd: function(data) {
-      stream.emit('end', data);
+    onEnd: function(result, message) {
+      stream.emit('end', message);
     },
     terminate: function(error) {
       stream.emit('error', error);

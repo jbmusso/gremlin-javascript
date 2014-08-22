@@ -5,8 +5,9 @@ describe('.execute() # nashorn', function() {
   it('should process raw JavaScript strings', function(done) {
     var client = gremlin.createClient({ language: 'nashorn' });
 
-    client.execute('g.V().filter(function(it) { return it.get().value("name") !== "gremlin" });', function(err, response) {
+    client.execute('g.V().filter(function(it) { return it.get().value("name") !== "gremlin" });', function(err, result) {
       (err === null).should.be.true;
+      result.length.should.equal(6);
       done();
     });
   });
@@ -18,9 +19,9 @@ describe('.execute() # nashorn', function() {
       g.V();
     };
 
-    client.execute(script, function(err, response) {
+    client.execute(script, function(err, result) {
       (err === null).should.be.true;
-      response.result.length.should.equal(6);
+      result.length.should.equal(6);
       done();
     });
   });
@@ -28,9 +29,9 @@ describe('.execute() # nashorn', function() {
   it('should process inlined JavaScript functions', function(done) {
     var client = gremlin.createClient({ language: 'nashorn' });
 
-    client.execute(function() { g.V(); }, function(err, response) {
+    client.execute(function() { g.V(); }, function(err, result) {
       (err === null).should.be.true;
-      response.result.length.should.equal(6);
+      result.length.should.equal(6);
       done();
     });
   });

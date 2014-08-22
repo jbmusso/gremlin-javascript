@@ -10,10 +10,10 @@ describe('Nashorn syntax', function() {
       });
     };
 
-    client.execute(script, function(err, response) {
+    client.execute(script, function(err, result) {
       (err === null).should.be.true;
-      response.result[0].properties.name.should.equal('josh');
-      response.result[5].properties.name.should.equal('vadas');
+      result[0].properties.name.should.equal('josh');
+      result[5].properties.name.should.equal('vadas');
     });
   });
 });
