@@ -40,6 +40,9 @@ var client = gremlin.createClient(8182, 'localhost', { session: true });
 The `options` object currently allows you to set two options:
 * `session`: whether to use sessions or not (default: `false`)
 * `language`: the script engine to use on the server, see your gremlin-server.yaml file (default: `"gremlin-groovy"`)
+* `op` (advanced usage): The name of the "operation" to execute based on the available OpProcessor (default: `"eval"`)
+* `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
+* `accept`: (default: `"application/json"`)
 
 ### Sending scripts to Gremlin Server for execution
 The client supports two modes: streaming results, or traditional callback mode.
@@ -53,17 +56,12 @@ The stream emits an `end` event when the client receives the last `statusCode: 2
 ```javascript
 var query = client.stream('g.V()');
 
-query.on('data', function(message) {
-  console.log(message.result);
+query.on('data', function(result, message) {
+  console.log(result);
 });
 
-// Alternatively
-// query.on('result', function(result) {
-//  console.log(result);
-// });
-
-query.on('end', function(msg) {
-  console.log("All results fetched", msg);
+query.on('end', function(message) {
+  console.log("All results fetched", message);
 });
 
 ```
@@ -75,9 +73,9 @@ Will execute the provided callback when all results are actually returned from t
 ```javascript
 var client = gremlin.createClient();
 
-client.execute('g.V()', function(err, response) {
+client.execute('g.V()', function(err, result, lastMessage, command) {
   if (!err) {
-    console.log(response.result)
+    console.log(result)
   }
 });
 ```
@@ -93,27 +91,27 @@ For better performance and security concerns, you may wish to send bound paramet
 ```javascript
 var client = gremlin.createClient();
 
-client.execute('g.v(id)', { id: 1 }, function(err, response) {
+client.execute('g.v(id)', { id: 1 }, function(err, result) {
   // Handle result
 });
 ```
 
 ### Overriding low level settings on a per request basis
 
-For advanced usage, for example if you wish to set the the `op` or `processor` values, you may wish to override values in the raw message sent to Gremlin Server:
+For advanced usage, for example if you wish to set the `op` or `processor` values for a given request only, you may wish to override the client level settings in the raw message sent to Gremlin Server:
 
 ```javascript
-client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, function(err, response) {
+client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, function(err, result) {
   // Handle result
 });
 ```
 
-Because we're not sending any bound parameters, notice how the second argument **must** be set to null so the low level message object is not mistaken with bound arguments.
+Because we're not sending any bound parameters, notice how the second argument **must** be set to `null` so the low level message object is not mistaken with bound arguments.
 
 If you wish to also send bound parameters while overriding the low level message, you can do the following:
 
 ```javascript
-client.execute('g.v(id)', { id: 1 }, { args: { language: 'nashorn' }}, function(err, response) {
+client.execute('g.v(id)', { id: 1 }, { args: { language: 'nashorn' }}, function(err, result) {
   // Handle result
 });
 ```
@@ -154,8 +152,8 @@ var script = function() {
 };
 
 // Send that script function body to Gremlin Server for execution in Nashorn engine
-client.execute(script, function(err, response) {
-  // Handle response.results
+client.execute(script, function(err, result) {
+  // Handle result
 });
 ```
 
