@@ -16,8 +16,11 @@ function GremlinClient(port, host, options) {
   this.host = host || 'localhost';
 
   this.options = _.defaults(options || {}, {
-    language: "gremlin-groovy",
-    session: false
+    language: 'gremlin-groovy',
+    session: false,
+    op: 'eval',
+    processor: '',
+    accept: 'application/json'
   });
 
   this.useSession = this.options.session;
@@ -37,7 +40,7 @@ function GremlinClient(port, host, options) {
   this.ws.onopen = this.onConnectionOpen.bind(this);
 
   this.ws.onerror = function(e) {
-    console.log("Error:", e);
+    console.log('Error:', e);
   };
 
   this.ws.onmessage = this.handleMessage.bind(this);
@@ -137,14 +140,14 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message, handl
   var args = _.defaults(message && message.args || {}, {
     gremlin: script,
     bindings: bindings,
-    accept: "application/json",
+    accept: this.options.accept,
     language: this.options.language,
   });
 
   message = _.defaults(message || {}, {
     requestId: guid,
-    processor: "",
-    op: "eval",
+    processor: this.options.processor,
+    op: this.options.op,
     args: args
   });
 
@@ -157,7 +160,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message, handl
   };
 
   if (this.useSession) {
-    command.message.processor = "session";
+    command.message.processor = 'session';
     command.message.args.session = this.sessionId;
   }
 
@@ -176,7 +179,7 @@ GremlinClient.prototype.sendMessage = function(command) {
  */
 GremlinClient.prototype.extractFunctionBody = function(fn) {
   var body = fn.toString();
-  body = body.substring(body.indexOf("{") + 1, body.lastIndexOf("}"));
+  body = body.substring(body.indexOf('{') + 1, body.lastIndexOf('}'));
 
   return body;
 };
