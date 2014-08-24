@@ -13,7 +13,7 @@ client.execute(script, function(err, res) {
 // Stream style
 var s = client.stream(script);
 
-s.on('result', function(result) {
+s.on('data', function(result) {
   console.log(result);
 });
 

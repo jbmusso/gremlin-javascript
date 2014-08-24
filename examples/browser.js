@@ -8,7 +8,7 @@ $(function() {
   var script = 'g.V';
   var query = client.stream(script);
 
-  query.on('result', function(d) {
+  query.on('data', function(d) {
     $("#results").append('<li>'+ JSON.stringify(d[0]) +'</li>');
   });
 

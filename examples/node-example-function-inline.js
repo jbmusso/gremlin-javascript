@@ -5,7 +5,7 @@ var client = gremlin.createClient(8182, 'localhost', { language: 'nashorn' });
 
 var s = client.stream(function() { g.v(id); }, { id: 1 });
 
-s.on('result', function(result) {
+s.on('data', function(result) {
   console.log(result);
 });
 
