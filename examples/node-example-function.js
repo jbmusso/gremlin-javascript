@@ -14,7 +14,7 @@ var script = function() {
 
 var s = client.stream(script, { id: 1 });
 
-s.on('result', function(result) {
+s.on('data', function(result) {
   console.log(result);
 });
 

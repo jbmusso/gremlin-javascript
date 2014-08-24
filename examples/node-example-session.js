@@ -7,7 +7,7 @@ var script = 'g.V[1..2]';
 
 var s = client.stream(script);
 
-s.on('result', function(result) {
+s.on('data', function(result) {
   console.log(result);
 });
 

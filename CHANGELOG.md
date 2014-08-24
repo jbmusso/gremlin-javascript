@@ -1,3 +1,7 @@
+## 0.2.1
+- Update dependencies
+- Fix examples to match latest API changes
+
 ## 0.2.0
 - Update `client.stream()` 'data' event signature to (result, message) from (message)
 - Update `client.execute()` callback signature to (err, result, lastMessage, command) from (err, message)
