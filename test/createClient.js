@@ -57,7 +57,7 @@ describe('.createClient()', function() {
     var s = client.stream('g.v(1)', null, { op: 'eval' });
 
     s.on('data', function(result) {
-      result.length.should.equal(1);
+      result.should.be.an('object');
     });
 
     s.on('end', function() {

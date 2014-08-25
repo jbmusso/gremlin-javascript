@@ -5,11 +5,9 @@ describe('.exec()', function() {
   it('should return a result and a response', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V()', function(err, result, response, command) {
+    client.execute('g.V()', function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(6);
-      response.should.exist;
-      response.code.should.equal(299);
       done();
     });
   });
