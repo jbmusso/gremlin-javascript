@@ -7,8 +7,8 @@ var script = function() {
   print("Hello from Node.js!");
   print('id:', this.context.getBindings(javax.script.ScriptContext.ENGINE_SCOPE).containsKey('id'), id);
 
-  g.v(id).out('created').filter(function(it) {
-    return it.get().value('name') !== 'gremlin';
+  g.v(id).out('knows').filter(function(it) {
+    return it.get().value('age') !== 32;
   });
 };
 

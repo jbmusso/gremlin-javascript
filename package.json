@@ -1,6 +1,6 @@
 {
   "name": "gremlin-client",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,9 @@
   "homepage": "https://github.com/gulthor/gremlin-client",
   "dependencies": {
     "guid": "0.0.12",
+    "highland": "^1.27.1",
     "lodash.defaults": "^2.4.1",
+    "readable-stream": "^1.0.31",
     "ws": "^0.4.32"
   },
   "devDependencies": {
