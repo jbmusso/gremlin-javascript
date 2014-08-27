@@ -132,10 +132,9 @@ GremlinClient.prototype.cancelPendingCommands = function(reason) {
  * For a given script string and optional bound parameters, build a command
  * object to be sent to Gremlin Server.
  *
- * @param {String} script
+ * @param {String|Function} script
  * @param {Object} bindings
  * @param {Object} message
- * @param {Object} handlers
  */
 GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   if (typeof script === 'function') {
@@ -191,6 +190,21 @@ GremlinClient.prototype.extractFunctionBody = function(fn) {
   return body;
 };
 
+/**
+ * Asynchronously send a script to Gremlin Server for execution and fire
+ * the provided callback when all results have been fetched.
+ *
+ * This method internally uses a stream to handle the potential concatenation
+ * of results.
+ *
+ * Callback signature: (Error, Array<result>)
+ *
+ * @public
+ * @param {String|Function} script
+ * @param {Object} bindings
+ * @param {Object} message
+ * @param {Function} callback
+ */
 GremlinClient.prototype.execute = function(script, bindings, message, callback) {
   callback = arguments[arguments.length - 1]; //todo: improve?
 
@@ -202,6 +216,7 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
   var stream = this.messageStream(script, bindings, message);
   var results = [];
 
+  // Using a Highland.js stream here because it's not publicly exposed
   stream = highland(stream)
     .map(function(message) { return message.result; });
 
@@ -219,22 +234,32 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
 };
 
 /**
- * Execute the script and return stream of distinct results.
- * This method reemits a distinct data event for each returned result.
+ * Execute the script and return a stream of distinct/single results.
+ * This method reemits a distinct data event for each returned result, which
+ * makes the stream behave as if `resultIterationBatchSize` was set to 1.
  *
- * Return a HighlandStream with all of the library high level methods attached,
- * allowing the user to create a Node.js/Browser side pipeline and issue more
- * transformations if needed.
+ * If you do not wish this behavior, please use client.messageStream() instead.
  *
- * @return {HighlandStream} a higher level readable stream
+ * Even though this method uses Highland.js internally, it does not return
+ * a high level Highland readable stream so we do not risk having to deal
+ * with unexpected API breaking changes as Highland.js evolves.
+ *
+ * @return {ReadableStream} A Node.js Stream2
  */
 GremlinClient.prototype.stream = function(script, bindings, message) {
   var messageStream = this.messageStream(script, bindings, message);
-  var stream = highland(messageStream)
-    .map(function(message) {
+  var _ = highland; // override lo-dash locally
+
+  // Create a local highland 'through' pipeline so we don't expose
+  // a Highland stream to the end user, but a standard Node.js Stream2
+  var through = _.pipeline(
+    _.map(function(message) {
       return message.result;
-    })
-    .sequence(); // reemit each result as a distinct 'data' event
+    }),
+    _.sequence()
+  );
+
+  var stream = messageStream.pipe(through);
 
   return stream;
 };
@@ -242,9 +267,16 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
 /**
  * Execute the script and return a stream of raw messages returned by Gremlin
  * Server.
+ * This method does not reemit one distinct data event per result. It directly
+ * emits the raw messages returned by Gremlin Server as they are received.
  *
- * This is a low level method intended to be used for advanced usages.
+ * Although public, this is a low level method intended to be used for
+ * advanced usages.
  *
+ * @public
+ * @param {String|Function} script
+ * @param {Object} bindings
+ * @param {Object} message
  * @return {MessageStream}
  */
 GremlinClient.prototype.messageStream = function(script, bindings, message) {
