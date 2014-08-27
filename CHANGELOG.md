@@ -1,3 +1,8 @@
+## 0.3.0
+- `client.stream()` now re-emits one distinct `data` event per result fetched instead of emiting an array of results
+- `client.execute()` now internally uses a stream to buffer partial results before firing the provided callback
+- Add `client.messageStream()` which returns a stream of raw response messages returned by Gremlin Server
+
 ## 0.2.1
 - Update dependencies
 - Fix examples to match latest API changes
