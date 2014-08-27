@@ -5,11 +5,11 @@ $(function() {
     console.log("Connection to Gremlin Server established!");
   });
 
-  var script = 'g.V';
+  var script = 'g.V()';
   var query = client.stream(script);
 
   query.on('data', function(d) {
-    $("#results").append('<li>'+ JSON.stringify(d[0]) +'</li>');
+    $("#results").append('<li>'+ JSON.stringify(d) +'</li>');
   });
 
   query.on('end', function(d) {

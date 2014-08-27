@@ -3,7 +3,7 @@ var gremlin = require('../');
 var client = gremlin.createClient();
 
 
-var script = 'g.V[1..2]';
+var script = 'g.V()[1..2]';
 
 // Callback style
 client.execute(script, function(err, res) {
