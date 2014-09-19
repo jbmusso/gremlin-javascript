@@ -59,17 +59,17 @@ inherits(GremlinClient, EventEmitter);
  * @param {MessageEvent} event
  */
 GremlinClient.prototype.handleMessage = function(event) {
-  var message = JSON.parse(event.data || event); // Node.js || Browser API
-  var command = this.commands[message.requestId];
+  var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
+  var command = this.commands[rawMessage.requestId];
   var stream = command.stream;
 
-  switch (message.code) {
+  switch (rawMessage.status.code) {
     case 200:
-      stream.push(message);
+      stream.push(rawMessage);
       break;
     case 299:
-      message.result = command.result;
-      delete this.commands[message.requestId]; // TODO: optimize performance
+      rawMessage.result = command.result;
+      delete this.commands[rawMessage.requestId]; // TODO: optimize performance
       stream.push(null);
       break;
   }
@@ -218,7 +218,9 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
 
   // Using a Highland.js stream here because it's not publicly exposed
   stream = highland(stream)
-    .map(function(message) { return message.result; });
+    .map(function(message) {
+      return message.result.data;
+    });
 
   stream.on('data', function(data) {
     results = results.concat(data);
@@ -254,7 +256,7 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
   // a Highland stream to the end user, but a standard Node.js Stream2
   var through = _.pipeline(
     _.map(function(message) {
-      return message.result;
+      return message.result.data;
     }),
     _.sequence()
   );

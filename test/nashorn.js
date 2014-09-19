@@ -2,7 +2,7 @@
 var gremlin = require('../');
 
 describe('Nashorn syntax', function() {
-  it('should handle .localeCompare() in lieu of <=> operator', function() {
+  it('should handle .localeCompare() as replacement for <=> operator', function() {
     var client = gremlin.createClient({ language: 'nashorn' });
     var script = function() {
       g.V().order(function(a, b) {
@@ -12,8 +12,8 @@ describe('Nashorn syntax', function() {
 
     client.execute(script, function(err, result) {
       (err === null).should.be.true;
-      result[0].properties.name.should.equal('josh');
-      result[5].properties.name.should.equal('vadas');
+      result[0].properties.name[0].value.should.equal('josh');
+      result[5].properties.name[0].value.should.equal('vadas');
     });
   });
 });

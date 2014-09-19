@@ -1,7 +1,7 @@
 /*jshint -W030 */
 var gremlin = require('../');
 
-describe('.exec()', function() {
+describe('.execute()', function() {
   it('should return a result and a response', function(done) {
     var client = gremlin.createClient();
 
@@ -32,16 +32,6 @@ describe('.exec()', function() {
     });
   });
 
-  it('should handle bound parameters', function(done) {
-    var client = gremlin.createClient();
-
-    client.execute('g.v(id)', { id: 1 }, function(err, result) {
-      (err === null).should.be.true;
-      result.length.should.equal(1);
-      done();
-    });
-  });
-
   it('should handle optional args', function(done) {
     var client = gremlin.createClient();
 
@@ -52,7 +42,7 @@ describe('.exec()', function() {
     });
   });
 
-  it('should handle bindings and optional args', function(done) {
+  it.skip('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
 
     client.execute('g.v(id)', { id : 1 }, { args: { language: 'nashorn' }}, function(err, result) {
