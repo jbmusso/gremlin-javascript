@@ -19,10 +19,10 @@ describe('.stream()', function() {
     });
   });
 
-  it.skip('should handle bound parameters', function(done) {
+  it('should handle bound parameters', function(done) {
     var client = gremlin.createClient();
 
-    var s = client.stream('g.v(id)', { id: 1 });
+    var s = client.stream('g.v(x)', { x: 1 });
 
     s.on('data', function(result) {
       result.id.should.equal(1);
@@ -47,7 +47,7 @@ describe('.stream()', function() {
     });
   });
 
-  it.skip('should handle bindings and optional args', function(done) {
+  it('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
 
     var s = client.stream('g.v(id)', { id : 1 }, { args: { language: 'nashorn' }});
