@@ -24,4 +24,14 @@ describe('Bindings', function() {
       done();
     });
   });
+
+  it('should give an error with erroneous binding name in .exec', function(done) {
+    var client = gremlin.createClient();
+
+    client.execute('g.v(id)', { id: 1 }, function(err, result) {
+      (err !== null).should.be.true;
+      (result === undefined).should.be.true;
+      done();
+    });
+  });
 });
