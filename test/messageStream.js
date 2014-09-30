@@ -7,8 +7,8 @@ describe('.messageStream', function() {
     var s = client.messageStream('g.V()');
 
     s.on('data', function(message) {
-      message.code.should.eql(200);
-      message.result.should.be.an('array');
+      message.status.code.should.eql(200);
+      message.result.data.should.be.an('array');
     });
 
     s.on('end', function() {

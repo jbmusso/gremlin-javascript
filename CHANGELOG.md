@@ -1,3 +1,8 @@
+## 0.3.1
+- Handle new response format
+- Better error handling in callback mode
+- Add support for sessions with arbitrary processors
+
 ## 0.3.0
 - `client.stream()` now re-emits one distinct `data` event per result fetched instead of emiting an array of results
 - `client.execute()` now internally uses a stream to buffer partial results before firing the provided callback

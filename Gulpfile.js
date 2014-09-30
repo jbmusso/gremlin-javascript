@@ -5,6 +5,7 @@ var size = require('gulp-size');
 var rename = require('gulp-rename');
 var mocha = require('gulp-mocha');
 var karma = require('karma').server;
+var args = require('yargs').argv;
 
 
 function printError(error) {
@@ -38,6 +39,7 @@ gulp.task('test-node', function() {
   return gulp.src('test/**/*')
       .pipe(mocha({
         reporter: 'spec',
+        bail: !!args.bail
       }))
       .on('error', printError);
 });

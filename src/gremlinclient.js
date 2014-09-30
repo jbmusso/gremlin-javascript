@@ -3,6 +3,7 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
+var domain = require('domain');
 
 var WebSocket = require('ws');
 var Guid = require('guid');
@@ -59,18 +60,21 @@ inherits(GremlinClient, EventEmitter);
  * @param {MessageEvent} event
  */
 GremlinClient.prototype.handleMessage = function(event) {
-  var message = JSON.parse(event.data || event); // Node.js || Browser API
-  var command = this.commands[message.requestId];
+  var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
+  var command = this.commands[rawMessage.requestId];
   var stream = command.stream;
+  var statusCode = rawMessage.status.code;
 
-  switch (message.code) {
+  switch (statusCode) {
     case 200:
-      stream.push(message);
+      stream.push(rawMessage);
       break;
     case 299:
-      message.result = command.result;
-      delete this.commands[message.requestId]; // TODO: optimize performance
+      delete this.commands[rawMessage.requestId]; // TODO: optimize performance
       stream.push(null);
+      break;
+    default:
+      stream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
       break;
   }
 };
@@ -164,7 +168,8 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   };
 
   if (this.useSession) {
-    command.message.processor = 'session';
+    // Assume that people want to use the 'session' processor unless specified
+    command.message.processor = this.options.processor || 'session';
     command.message.args.session = this.sessionId;
   }
 
@@ -213,23 +218,26 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
     message = {};
   }
 
-  var stream = this.messageStream(script, bindings, message);
-  var results = [];
+  var _ = highland;
 
-  // Using a Highland.js stream here because it's not publicly exposed
-  stream = highland(stream)
-    .map(function(message) { return message.result; });
-
-  stream.on('data', function(data) {
-    results = results.concat(data);
+  // Handling all stream errors
+  // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
+  var d = domain.create();
+  d.on('error', function(err) {
+    callback(err.message);
   });
 
-  stream.on('end', function() {
-    callback(null, results);
-  });
+  var messageStream = this.messageStream(script, bindings, message);
 
-  stream.on('error', function(error) {
-    callback(new Error('Stream error: ' + error));
+  d.run(function() {
+    _(messageStream)
+    .map(function(message) {
+      return message.result.data;
+    })
+    .sequence()
+    .toArray(function(results) {
+      callback(null, results);
+    });
   });
 };
 
@@ -254,7 +262,7 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
   // a Highland stream to the end user, but a standard Node.js Stream2
   var through = _.pipeline(
     _.map(function(message) {
-      return message.result;
+      return message.result.data;
     }),
     _.sequence()
   );

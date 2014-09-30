@@ -5,9 +5,11 @@ describe('.execute() # nashorn', function() {
   it('should process raw JavaScript strings', function(done) {
     var client = gremlin.createClient({ language: 'nashorn' });
 
-    client.execute('g.V().filter(function(it) { return it.get().value("name") !== "gremlin" });', function(err, result) {
+    var script = 'g.V()["filter(SPredicate)"](function(it) { return it.get().property("lang").orElse("") == "java" });';
+
+    client.execute(script, function(err, result) {
       (err === null).should.be.true;
-      result.length.should.equal(6);
+      result.length.should.equal(2);
       done();
     });
   });
