@@ -173,8 +173,6 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
     command.message.args.session = this.sessionId;
   }
 
-  this.sendCommand(command); //todo improve for streams
-
   return command;
 };
 
@@ -289,6 +287,8 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
  */
 GremlinClient.prototype.messageStream = function(script, bindings, message) {
   var command = this.buildCommand(script, bindings, message);
+
+  this.sendCommand(command); //todo improve for streams
 
   return command.stream;
 };
