@@ -267,6 +267,10 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
 
   var stream = messageStream.pipe(through);
 
+  messageStream.on('error', function(e) {
+    stream.emit('error', new Error(e));
+  });
+
   return stream;
 };
 
