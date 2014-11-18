@@ -14,6 +14,28 @@ var highland = require('highland');
 
 var MessageStream = require('./messagestream');
 
+function defaultExecuteHandler(messageStream, callback) {
+  var errored = false;
+
+  highland(messageStream)
+    .stopOnError(function(err) {
+      // TODO: this does not seem to halt the stream properly, and make
+      // the callback being fired twice. We need to get rid of the ugly
+      // errored variable check.
+      errored = true;
+      callback(err);
+    })
+    .map(function(message) {
+      return message.result.data;
+    })
+    .sequence()
+    .toArray(function(results) {
+      if (!errored) {
+        callback(null, results);
+      }
+    });
+}
+
 function GremlinClient(port, host, options) {
   this.port = port || 8182;
   this.host = host || 'localhost';
@@ -23,7 +45,8 @@ function GremlinClient(port, host, options) {
     session: false,
     op: 'eval',
     processor: '',
-    accept: 'application/json'
+    accept: 'application/json',
+    executeHandler: defaultExecuteHandler //
   });
 
   this.useSession = this.options.session;
@@ -216,32 +239,14 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
     message = {};
   }
 
-  var _ = highland;
-
   var messageStream = this.messageStream(script, bindings, message);
 
   // TO CHECK: errors handling could be improved
   // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
   // for an example using domains
-  var errored = false;
+  var executeHandler = this.options.executeHandler;
 
-  _(messageStream)
-  .stopOnError(function(err) {
-    // TODO: this does not seem to halt the stream properly, and make
-    // the callback being fired twice. We need to get rid of the ugly errored
-    // variable check.
-    errored = true;
-    callback(err);
-  })
-  .map(function(message) {
-    return message.result.data;
-  })
-  .sequence()
-  .toArray(function(results) {
-    if (!errored) {
-      callback(null, results);
-    }
-  });
+  executeHandler(messageStream, callback);
 };
 
 /**

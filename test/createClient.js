@@ -6,13 +6,12 @@ describe('.createClient()', function() {
 
     client.port.should.equal(8182);
     client.host.should.equal('localhost');
-    client.options.should.eql({
-      language: 'gremlin-groovy',
-      session: false,
-      op: 'eval',
-      processor: '',
-      accept: 'application/json'
-    });
+
+    client.options.language.should.eql('gremlin-groovy');
+    client.options.session.should.eql(false);
+    client.options.op.should.eql('eval');
+    client.options.processor.should.eql('');
+    client.options.accept.should.eql('application/json');
   });
 
   it('should allow setting the `session` option', function() {
