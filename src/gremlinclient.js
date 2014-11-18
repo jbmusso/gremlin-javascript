@@ -218,24 +218,22 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
 
   var _ = highland;
 
-  // Handling all stream errors
-  // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
-  var d = domain.create();
-  d.on('error', function(err) {
-    callback(err.message);
-  });
-
   var messageStream = this.messageStream(script, bindings, message);
 
-  d.run(function() {
-    _(messageStream)
-    .map(function(message) {
-      return message.result.data;
-    })
-    .sequence()
-    .toArray(function(results) {
-      callback(null, results);
-    });
+  // TO CHECK: errors handling could be improved
+  // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
+  // for an example using domains
+  _(messageStream)
+  .errors(function(err) {
+    // Handling all stream errors. TODO: return a custom Error?
+    callback(err);
+  })
+  .map(function(message) {
+    return message.result.data;
+  })
+  .sequence()
+  .toArray(function(results) {
+    callback(null, results);
   });
 };
 
