@@ -223,9 +223,14 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
   // TO CHECK: errors handling could be improved
   // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
   // for an example using domains
+  var errored = false;
+
   _(messageStream)
-  .errors(function(err) {
-    // Handling all stream errors. TODO: return a custom Error?
+  .stopOnError(function(err) {
+    // TODO: this does not seem to halt the stream properly, and make
+    // the callback being fired twice. We need to get rid of the ugly errored
+    // variable check.
+    errored = true;
     callback(err);
   })
   .map(function(message) {
@@ -233,7 +238,9 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
   })
   .sequence()
   .toArray(function(results) {
-    callback(null, results);
+    if (!errored) {
+      callback(null, results);
+    }
   });
 };
 
