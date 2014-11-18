@@ -4,7 +4,30 @@
     <title>Gremlin Client browser example</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript" src="/gremlin.js"></script>
-    <script type="text/javascript" src="/examples/browser.js"></script>
+    <script type="text/javascript">
+    $(function() {
+      var client = gremlin.createClient();
+
+      client.on('open', function() {
+        console.log("Connection to Gremlin Server established!");
+      });
+
+      var script = 'g.V()';
+      var query = client.stream(script);
+
+      query.on('data', function(d) {
+        $("#results").append('<li>'+ JSON.stringify(d) +'</li>');
+      });
+
+      query.on('end', function(d) {
+        $('body').append('All results fetched');
+      });
+
+      query.on('error', function(e) {
+        $('body').append('Could not complete query:', e.message);
+      });
+    });
+    </script>
   </head>
 
   <body>
