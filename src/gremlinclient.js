@@ -62,19 +62,19 @@ inherits(GremlinClient, EventEmitter);
 GremlinClient.prototype.handleMessage = function(event) {
   var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
   var command = this.commands[rawMessage.requestId];
-  var stream = command.stream;
+  var messageStream = command.messageStream;
   var statusCode = rawMessage.status.code;
 
   switch (statusCode) {
     case 200:
-      stream.push(rawMessage);
+      messageStream.push(rawMessage);
       break;
     case 299:
       delete this.commands[rawMessage.requestId]; // TODO: optimize performance
-      stream.push(null);
+      messageStream.push(null);
       break;
     default:
-      stream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
+      messageStream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
       break;
   }
 };
@@ -128,7 +128,7 @@ GremlinClient.prototype.cancelPendingCommands = function(reason) {
 
   Object.keys(commands).forEach(function(key) {
     command = commands[key];
-    command.stream.emit('error', error);
+    command.messageStream.emit('error', error);
   });
 };
 
@@ -146,7 +146,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   }
   bindings = bindings || {};
 
-  var stream = new MessageStream({ objectMode: true });
+  var messageStream = new MessageStream({ objectMode: true });
   var guid = Guid.create().value;
   var args = _.defaults(message && message.args || {}, {
     gremlin: script,
@@ -164,7 +164,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
 
   var command = {
     message: message,
-    stream: stream
+    messageStream: messageStream
   };
 
   if (this.useSession) {
@@ -294,7 +294,7 @@ GremlinClient.prototype.messageStream = function(script, bindings, message) {
 
   this.sendCommand(command); //todo improve for streams
 
-  return command.stream;
+  return command.messageStream;
 };
 
 /**
