@@ -28,7 +28,7 @@
     "highland": "^1.27.1",
     "lodash.defaults": "^2.4.1",
     "readable-stream": "^1.0.31",
-    "ws": "^0.4.32"
+    "ws": "^0.7.1"
   },
   "devDependencies": {
     "browserify": "^4.0.0",
