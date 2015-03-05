@@ -1,22 +1,22 @@
 /*jslint -W079 */
 /*jslint node: true */
 'use strict';
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('util').inherits;
+const EventEmitter = require('events').EventEmitter;
+const inherits = require('util').inherits;
 
-var WebSocket = require('ws');
-var Guid = require('guid');
-var _ = {
+const WebSocket = require('ws');
+const Guid = require('guid');
+const _ = {
   defaults: require('lodash.defaults'),
   isArray: require('lodash.isArray')
 };
-var highland = require('highland');
+const highland = require('highland');
 
-var MessageStream = require('./messagestream');
+const MessageStream = require('./messagestream');
 
 function defaultExecuteHandler(messageStream, callback) {
-  var errored = false;
-  var objectMode = false;
+  let errored = false;
+  let objectMode = false;
 
   highland(messageStream)
     .stopOnError(function(err) {
@@ -86,10 +86,10 @@ inherits(GremlinClient, EventEmitter);
  * @param {MessageEvent} event
  */
 GremlinClient.prototype.handleMessage = function(event) {
-  var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
-  var command = this.commands[rawMessage.requestId];
-  var statusCode = rawMessage.status.code;
-  var messageStream = command.messageStream;
+  let rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
+  let command = this.commands[rawMessage.requestId];
+  let statusCode = rawMessage.status.code;
+  let messageStream = command.messageStream;
 
   switch (statusCode) {
     case 200:
@@ -131,7 +131,7 @@ GremlinClient.prototype.handleDisconnection = function(event) {
  * (First In, First Out).
  */
 GremlinClient.prototype.executeQueue = function() {
-  var command;
+  let command;
 
   while (this.queue.length > 0) {
     command = this.queue.shift();
@@ -143,9 +143,9 @@ GremlinClient.prototype.executeQueue = function() {
  * @param {Object} reason
  */
 GremlinClient.prototype.cancelPendingCommands = function(reason) {
-  var commands = this.commands;
-  var command;
-  var error = new Error(reason.message);
+  let commands = this.commands;
+  let command;
+  let error = new Error(reason.message);
   error.details = reason.details;
 
   // Empty queue
@@ -172,9 +172,9 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   }
   bindings = bindings || {};
 
-  var messageStream = new MessageStream({ objectMode: true });
-  var guid = Guid.create().value;
-  var args = _.defaults(message && message.args || {}, {
+  let messageStream = new MessageStream({ objectMode: true });
+  let guid = Guid.create().value;
+  let args = _.defaults(message && message.args || {}, {
     gremlin: script,
     bindings: bindings,
     accept: this.options.accept,
@@ -188,7 +188,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
     args: args
   });
 
-  var command = {
+  let command = {
     message: message,
     messageStream: messageStream
   };
@@ -213,7 +213,7 @@ GremlinClient.prototype.sendMessage = function(message) {
  * @return {String}
  */
 GremlinClient.prototype.extractFunctionBody = function(fn) {
-  var body = fn.toString();
+  let body = fn.toString();
   body = body.substring(body.indexOf('{') + 1, body.lastIndexOf('}'));
 
   return body;
@@ -242,12 +242,12 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
     message = {};
   }
 
-  var messageStream = this.messageStream(script, bindings, message);
+  let messageStream = this.messageStream(script, bindings, message);
 
   // TO CHECK: errors handling could be improved
   // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
   // for an example using domains
-  var executeHandler = this.options.executeHandler;
+  let executeHandler = this.options.executeHandler;
 
   executeHandler(messageStream, callback);
 };
@@ -266,19 +266,19 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
  * @return {ReadableStream} A Node.js Stream2
  */
 GremlinClient.prototype.stream = function(script, bindings, message) {
-  var messageStream = this.messageStream(script, bindings, message);
-  var _ = highland; // override lo-dash locally
+  let messageStream = this.messageStream(script, bindings, message);
+  let _ = highland; // override lo-dash locally
 
   // Create a local highland 'through' pipeline so we don't expose
   // a Highland stream to the end user, but a standard Node.js Stream2
-  var through = _.pipeline(
+  let through = _.pipeline(
     _.map(function(message) {
       return message.result.data;
     }),
     _.sequence()
   );
 
-  var stream = messageStream.pipe(through);
+  let stream = messageStream.pipe(through);
 
   messageStream.on('error', function(e) {
     stream.emit('error', new Error(e));
@@ -303,7 +303,7 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
  * @return {MessageStream}
  */
 GremlinClient.prototype.messageStream = function(script, bindings, message) {
-  var command = this.buildCommand(script, bindings, message);
+  let command = this.buildCommand(script, bindings, message);
 
   this.sendCommand(command); //todo improve for streams
 
