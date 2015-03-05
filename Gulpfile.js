@@ -1,8 +1,10 @@
 'use strict';
 var gulp = require('gulp');
 var browserify = require('browserify');
-var transform = require('vinyl-transform');
+var babelify = require('babelify');
+var source = require('vinyl-source-stream');
 
+var buffer = require('gulp-buffer');
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
@@ -21,24 +23,30 @@ function printEvent(event) {
 }
 
 
-gulp.task('build', function() {
-  var browserified = transform(function(filename) {
-    var b = browserify(filename, {
+var bundler;
+function getBundler() {
+  if (!bundler) {
+    bundler = browserify('./index.js', {
       debug: true,
       standalone: 'gremlin'
     });
-    return b.bundle();
-  });
+  }
+  return bundler;
+}
 
-  return gulp.src(['./index.js'])
-      .pipe(browserified)
-      .pipe(rename('gremlin.js'))
-      .pipe(gulp.dest('./'))
-      .pipe(size({ showFiles: true }))
-      .pipe(uglify())
-      .pipe(rename('gremlin.min.js'))
-      .pipe(gulp.dest('./'))
-      .pipe(size({ showFiles: true }));
+gulp.task('build', function() {
+  return getBundler()
+    .transform(babelify)
+    .bundle()
+    .on('error', function(err) { console.log('Error: ' + err.message); })
+    .pipe(source('./gremlin.js'))
+    .pipe(gulp.dest('./'))
+    .pipe(buffer())
+    .pipe(size({ showFiles: true }))
+    .pipe(uglify())
+    .pipe(rename('gremlin.min.js'))
+    .pipe(size({ showFiles: true }))
+    .pipe(gulp.dest('./'));
 });
 
 gulp.task('test', ['test:node', 'test:browsers']);
