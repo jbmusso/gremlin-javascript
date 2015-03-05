@@ -14,7 +14,7 @@ describe('.execute() # nashorn', function() {
     });
   });
 
-  it('should process raw JavaScript with nashorn disambiguation syntax', function(done) {
+  it.skip('should process raw JavaScript with nashorn disambiguation syntax', function(done) {
     var client = gremlin.createClient();
     var script = 'g.V()["filter(Predicate)"](function(it) { return it.get().property("lang").orElse("") == "java" });';
 
