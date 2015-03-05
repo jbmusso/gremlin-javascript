@@ -191,7 +191,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
 
   if (this.useSession) {
     // Assume that people want to use the 'session' processor unless specified
-    command.message.processor = this.options.processor || 'session';
+    command.message.processor = message.processor || this.options.processor || 'session';
     command.message.args.session = this.sessionId;
   }
 
