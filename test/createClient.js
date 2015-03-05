@@ -1,3 +1,4 @@
+'use strict';
 var gremlin = require('../');
 
 describe('.createClient()', function() {
@@ -53,7 +54,7 @@ describe('.createClient()', function() {
     client.host.should.equal('localhost');
     client.options.op.should.equal('foo');
 
-    var s = client.stream('g.v(1)', null, { op: 'eval' });
+    var s = client.stream('g.V(1)', null, { op: 'eval' });
 
     s.on('data', function(result) {
       result.should.be.an('object');

@@ -1,14 +1,11 @@
 /*jshint -W030 */
+'use strict';
 var gremlin = require('../');
 
 describe('.execute()', function() {
-  var client;
-
-  beforeEach(function() {
-    client = gremlin.createClient();
-  });
-
   it('should return a result and a response', function(done) {
+    var client = gremlin.createClient();
+
     client.execute('g.V()', function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(6);
@@ -17,12 +14,16 @@ describe('.execute()', function() {
   });
 
   it('should queue command before the client is connected', function(done) {
+    var client = gremlin.createClient();
+
     client.execute('g.V()', function() { });
     client.queue.length.should.equal(1);
     done();
   });
 
   it('should send commands after the client is connected', function(done) {
+    var client = gremlin.createClient();
+
     client.on('connect', function() {
       client.execute('g.V()', function(err, result) {
         (err === null).should.be.true;
@@ -33,7 +34,9 @@ describe('.execute()', function() {
   });
 
   it('should handle optional args', function(done) {
-    client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, function(err, result) {
+    var client = gremlin.createClient();
+
+    client.execute('g.V(1)', null, { args: { language: 'nashorn' }}, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
       done();
@@ -41,7 +44,9 @@ describe('.execute()', function() {
   });
 
   it('should handle bindings and optional args', function(done) {
-    client.execute('g.v(x)', { x: 1 }, { args: { language: 'nashorn' }}, function(err, result) {
+    var client = gremlin.createClient();
+
+    client.execute('g.V(x)', { x: 1 }, { args: { language: 'nashorn' }}, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
       done();
@@ -49,6 +54,7 @@ describe('.execute()', function() {
   });
 
   it('should handle errors', function(done) {
+    var client = gremlin.createClient();
     // pass a buggy script (missing parenthese)
     var script = 'g.V(';
 
