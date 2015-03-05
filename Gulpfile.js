@@ -37,8 +37,6 @@ gulp.task('build', function() {
 gulp.task('test', ['test:node', 'test:browsers']);
 
 gulp.task('test:node', function() {
-  require('chai').should();
-
   return gulp.src('test/**/*')
       .pipe(mocha({
         reporter: 'spec',
