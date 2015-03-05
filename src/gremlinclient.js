@@ -3,7 +3,6 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
-var domain = require('domain');
 
 var WebSocket = require('ws');
 var Guid = require('guid');
