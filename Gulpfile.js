@@ -1,6 +1,8 @@
 'use strict';
 var gulp = require('gulp');
-var browserify = require('gulp-browserify');
+var browserify = require('browserify');
+var transform = require('vinyl-transform');
+
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
@@ -18,16 +20,21 @@ function printEvent(event) {
   console.log('File', event.type +':', event.path);
 }
 
+
 gulp.task('build', function() {
-  gulp.src('index.js')
-      .pipe(browserify({
-        debug: true,
-        standalone: 'gremlin'
-      }))
+  var browserified = transform(function(filename) {
+    var b = browserify(filename, {
+      debug: true,
+      standalone: 'gremlin'
+    });
+    return b.bundle();
+  });
+
+  return gulp.src(['./index.js'])
+      .pipe(browserified)
       .pipe(rename('gremlin.js'))
       .pipe(gulp.dest('./'))
       .pipe(size({ showFiles: true }))
-      // Minified version
       .pipe(uglify())
       .pipe(rename('gremlin.min.js'))
       .pipe(gulp.dest('./'))
