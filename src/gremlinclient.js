@@ -84,8 +84,8 @@ inherits(GremlinClient, EventEmitter);
 GremlinClient.prototype.handleMessage = function(event) {
   var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
   var command = this.commands[rawMessage.requestId];
-  var messageStream = command.messageStream;
   var statusCode = rawMessage.status.code;
+  var messageStream = command.messageStream;
 
   switch (statusCode) {
     case 200:
