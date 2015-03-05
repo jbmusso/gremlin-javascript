@@ -11,7 +11,7 @@ plugins:
   - tinkerpop.tinkergraph
 scriptEngines: {
   gremlin-groovy: {
-    imports: [com.tinkerpop.gremlin.tinkergraph.structure.*, com.tinkerpop.gremlin.tinkergraph.process.computer.*,java.lang.Math],
+    imports: [java.lang.Math],
     staticImports: [java.lang.Math.PI],
     scripts: [scripts/generate-classic.groovy]},
   nashorn: {
