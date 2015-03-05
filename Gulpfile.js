@@ -1,3 +1,4 @@
+'use strict';
 var gulp = require('gulp');
 var browserify = require('gulp-browserify');
 var uglify = require('gulp-uglify');
@@ -33,7 +34,9 @@ gulp.task('build', function() {
       .pipe(size({ showFiles: true }));
 });
 
-gulp.task('test-node', function() {
+gulp.task('test', ['test:node', 'test:browsers']);
+
+gulp.task('test:node', function() {
   require('chai').should();
 
   return gulp.src('test/**/*')
@@ -44,7 +47,7 @@ gulp.task('test-node', function() {
       .on('error', printError);
 });
 
-gulp.task('test-browsers', function(done) {
+gulp.task('test:browsers', function(done) {
   var karmaCommonConf = {
     browsers: ['Chrome', 'Firefox', 'Safari'],
     frameworks: ['mocha', 'chai', 'browserify'],
@@ -69,4 +72,4 @@ gulp.task('watch', function() {
 
 gulp.task('default', ['build']);
 
-gulp.task('dev', ['test-browsers', 'test-node', 'watch']);
+gulp.task('dev', ['test', 'watch']);
