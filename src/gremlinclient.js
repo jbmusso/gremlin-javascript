@@ -7,7 +7,8 @@ var inherits = require('util').inherits;
 var WebSocket = require('ws');
 var Guid = require('guid');
 var _ = {
-  defaults: require('lodash.defaults')
+  defaults: require('lodash.defaults'),
+  isArray: require('lodash.isArray')
 };
 var highland = require('highland');
 
@@ -15,6 +16,7 @@ var MessageStream = require('./messagestream');
 
 function defaultExecuteHandler(messageStream, callback) {
   var errored = false;
+  var objectMode = false;
 
   highland(messageStream)
     .stopOnError(function(err) {
@@ -25,12 +27,14 @@ function defaultExecuteHandler(messageStream, callback) {
       callback(err);
     })
     .map(function(message) {
+      objectMode = !_.isArray(message.result.data);
+
       return message.result.data;
     })
     .sequence()
     .toArray(function(results) {
       if (!errored) {
-        callback(null, results);
+        callback(null, objectMode ? results[0] : results);
       }
     });
 }

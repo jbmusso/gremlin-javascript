@@ -27,6 +27,7 @@
     "guid": "0.0.12",
     "highland": "^1.27.1",
     "lodash.defaults": "^2.4.1",
+    "lodash.isarray": "^3.0.0",
     "readable-stream": "^1.0.31",
     "ws": "^0.7.1"
   },
