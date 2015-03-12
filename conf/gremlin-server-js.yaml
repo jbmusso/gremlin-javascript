@@ -5,6 +5,7 @@ threadPoolWorker: 1
 gremlinPool: 8
 scriptEvaluationTimeout: 30000
 serializedResponseTimeout: 30000
+channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
 graphs: {
   g: conf/tinkergraph-empty.properties}
 plugins:
@@ -18,8 +19,10 @@ scriptEngines: {
       imports: [java.lang.Math],
       staticImports: [java.lang.Math.PI]}}
 serializers:
-  - { className: com.tinkerpop.gremlin.driver.ser.KryoMessageSerializerV1d0 }
-  - { className: com.tinkerpop.gremlin.driver.ser.KryoMessageSerializerV1d0, config: { serializeResultToString: true }}
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0 }
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }}
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.JsonMessageSerializerGremlinV1d0 }
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.JsonMessageSerializerV1d0 }
 metrics: {
   slf4jReporter: {enabled: true, interval: 180000}}
 threadPoolBoss: 1
@@ -29,3 +32,5 @@ maxChunkSize: 8192
 maxContentLength: 65536
 maxAccumulationBufferComponents: 1024
 resultIterationBatchSize: 2
+ssl: {
+  enabled: false}
