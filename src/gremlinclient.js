@@ -69,12 +69,15 @@ GremlinClient.prototype.handleMessage = function(event) {
   var messageStream = command.messageStream;
 
   switch (statusCode) {
-    case 200:
-      messageStream.push(rawMessage);
-      break;
-    case 299:
+    case 200: // SUCCESS
       delete this.commands[rawMessage.requestId]; // TODO: optimize performance
+      messageStream.push(rawMessage);
       messageStream.push(null);
+      break;
+    case 204: // NO_CONTENT
+      break;
+    case 206: // PARTIAL_CONTENT
+      messageStream.push(rawMessage);
       break;
     default:
       messageStream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
