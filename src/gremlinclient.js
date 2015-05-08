@@ -3,6 +3,7 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
+var async = require('async');
 
 var WebSocket = require('ws');
 var Guid = require('guid');
@@ -26,7 +27,8 @@ function GremlinClient(port, host, options) {
     op: 'eval',
     processor: '',
     accept: 'application/json',
-    executeHandler: executeHandler
+    executeHandler: executeHandler,
+    concurrency: Infinity
   });
 
   this.useSession = this.options.session;
@@ -36,7 +38,9 @@ function GremlinClient(port, host, options) {
   }
 
   this.connected = false;
-  this.queue = [];
+
+  this.queue = async.queue(this.processCommand.bind(this), this.options.concurrency);
+  this.queue.pause();
 
   this.commands = {};
 
@@ -56,6 +60,14 @@ function GremlinClient(port, host, options) {
 
 inherits(GremlinClient, EventEmitter);
 
+GremlinClient.prototype.processCommand = function(command, callback) {
+  // Pass the async queue callback to the command and fire it when we're done
+  // receiving results from the server, so we can process the next queued
+  // command
+  command.callback = callback;
+  this.sendMessage(command.message);
+};
+
 /**
  * Process all incoming raw message events sent by Gremlin Server, and dispatch
  * to the appropriate command.
@@ -73,14 +85,17 @@ GremlinClient.prototype.handleMessage = function(event) {
       delete this.commands[rawMessage.requestId]; // TODO: optimize performance
       messageStream.push(rawMessage);
       messageStream.push(null);
+      command.callback(); // Free queue
       break;
     case 204: // NO_CONTENT
+      command.callback(); // Free queue
       break;
     case 206: // PARTIAL_CONTENT
       messageStream.push(rawMessage);
       break;
     default:
       messageStream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
+      command.callback(); // Free queue
       break;
   }
 };
@@ -93,7 +108,7 @@ GremlinClient.prototype.onConnectionOpen = function() {
   this.connected = true;
   this.emit('connect');
 
-  this.executeQueue();
+  this.queue.resume();
 };
 
 /**
@@ -107,19 +122,6 @@ GremlinClient.prototype.handleDisconnection = function(event) {
 };
 
 /**
- * Process the current command queue, sending commands to Gremlin Server
- * (First In, First Out).
- */
-GremlinClient.prototype.executeQueue = function() {
-  var command;
-
-  while (this.queue.length > 0) {
-    command = this.queue.shift();
-    this.sendMessage(command.message);
-  }
-};
-
-/**
  * @param {Object} reason
  */
 GremlinClient.prototype.cancelPendingCommands = function(reason) {
@@ -128,8 +130,7 @@ GremlinClient.prototype.cancelPendingCommands = function(reason) {
   var error = new Error(reason.message);
   error.details = reason.details;
 
-  // Empty queue
-  this.queue.length = 0;
+  this.queue.kill();
   this.commands = {};
 
   Object.keys(commands).forEach(function(key) {
@@ -299,11 +300,7 @@ GremlinClient.prototype.messageStream = function(script, bindings, message) {
 GremlinClient.prototype.sendCommand = function(command) {
   this.commands[command.message.requestId] = command;
 
-  if (this.connected) {
-    this.sendMessage(command.message);
-  } else {
-    this.queue.push(command);
-  }
+  this.queue.push(command);
 };
 
 module.exports = GremlinClient;

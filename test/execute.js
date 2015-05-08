@@ -17,7 +17,7 @@ describe('.execute()', function() {
     var client = gremlin.createClient();
 
     client.execute('g.V()', function() { });
-    client.queue.length.should.equal(1);
+    client.queue.length().should.equal(1);
     done();
   });
 
