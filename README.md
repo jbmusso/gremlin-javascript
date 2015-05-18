@@ -221,3 +221,7 @@ then open [http://localhost:3000/examples/gremlin.html](http://localhost:3000/ex
 * add option for secure WebSocket
 * more tests
 * performance optimization
+
+## License
+
+MIT(LICENSE)

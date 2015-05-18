@@ -18,7 +18,7 @@
     "database"
   ],
   "author": "Jean-Baptiste Musso <jbmusso+github@gmail.com>",
-  "license": "Apache",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/gulthor/gremlin-client/issues"
   },
