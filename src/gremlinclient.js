@@ -3,7 +3,6 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
-var domain = require('domain');
 
 var WebSocket = require('ws');
 var Guid = require('guid');
@@ -14,6 +13,9 @@ var highland = require('highland');
 
 var MessageStream = require('./messagestream');
 
+
+var executeHandler = require('./executehandler');
+
 function GremlinClient(port, host, options) {
   this.port = port || 8182;
   this.host = host || 'localhost';
@@ -23,7 +25,8 @@ function GremlinClient(port, host, options) {
     session: false,
     op: 'eval',
     processor: '',
-    accept: 'application/json'
+    accept: 'application/json',
+    executeHandler: executeHandler
   });
 
   this.useSession = this.options.session;
@@ -62,19 +65,22 @@ inherits(GremlinClient, EventEmitter);
 GremlinClient.prototype.handleMessage = function(event) {
   var rawMessage = JSON.parse(event.data || event); // Node.js || Browser API
   var command = this.commands[rawMessage.requestId];
-  var stream = command.stream;
   var statusCode = rawMessage.status.code;
+  var messageStream = command.messageStream;
 
   switch (statusCode) {
-    case 200:
-      stream.push(rawMessage);
-      break;
-    case 299:
+    case 200: // SUCCESS
       delete this.commands[rawMessage.requestId]; // TODO: optimize performance
-      stream.push(null);
+      messageStream.push(rawMessage);
+      messageStream.push(null);
+      break;
+    case 204: // NO_CONTENT
+      break;
+    case 206: // PARTIAL_CONTENT
+      messageStream.push(rawMessage);
       break;
     default:
-      stream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
+      messageStream.emit('error', new Error(rawMessage.status.message + ' (Error '+ statusCode +')'));
       break;
   }
 };
@@ -128,7 +134,7 @@ GremlinClient.prototype.cancelPendingCommands = function(reason) {
 
   Object.keys(commands).forEach(function(key) {
     command = commands[key];
-    command.stream.emit('error', error);
+    command.messageStream.emit('error', error);
   });
 };
 
@@ -146,7 +152,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   }
   bindings = bindings || {};
 
-  var stream = new MessageStream({ objectMode: true });
+  var messageStream = new MessageStream({ objectMode: true });
   var guid = Guid.create().value;
   var args = _.defaults(message && message.args || {}, {
     gremlin: script,
@@ -164,16 +170,14 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
 
   var command = {
     message: message,
-    stream: stream
+    messageStream: messageStream
   };
 
   if (this.useSession) {
     // Assume that people want to use the 'session' processor unless specified
-    command.message.processor = this.options.processor || 'session';
+    command.message.processor = message.processor || this.options.processor || 'session';
     command.message.args.session = this.sessionId;
   }
-
-  this.sendCommand(command); //todo improve for streams
 
   return command;
 };
@@ -218,27 +222,14 @@ GremlinClient.prototype.execute = function(script, bindings, message, callback) 
     message = {};
   }
 
-  var _ = highland;
-
-  // Handling all stream errors
-  // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
-  var d = domain.create();
-  d.on('error', function(err) {
-    callback(err.message);
-  });
-
   var messageStream = this.messageStream(script, bindings, message);
 
-  d.run(function() {
-    _(messageStream)
-    .map(function(message) {
-      return message.result.data;
-    })
-    .sequence()
-    .toArray(function(results) {
-      callback(null, results);
-    });
-  });
+  // TO CHECK: errors handling could be improved
+  // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
+  // for an example using domains
+  var executeHandler = this.options.executeHandler;
+
+  executeHandler(messageStream, callback);
 };
 
 /**
@@ -269,6 +260,10 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
 
   var stream = messageStream.pipe(through);
 
+  messageStream.on('error', function(e) {
+    stream.emit('error', new Error(e));
+  });
+
   return stream;
 };
 
@@ -290,7 +285,9 @@ GremlinClient.prototype.stream = function(script, bindings, message) {
 GremlinClient.prototype.messageStream = function(script, bindings, message) {
   var command = this.buildCommand(script, bindings, message);
 
-  return command.stream;
+  this.sendCommand(command); //todo improve for streams
+
+  return command.messageStream;
 };
 
 /**

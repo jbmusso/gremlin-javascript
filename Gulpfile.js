@@ -1,5 +1,10 @@
+'use strict';
 var gulp = require('gulp');
-var browserify = require('gulp-browserify');
+var browserify = require('browserify');
+var babelify = require('babelify');
+var source = require('vinyl-source-stream');
+
+var buffer = require('gulp-buffer');
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
@@ -17,25 +22,36 @@ function printEvent(event) {
   console.log('File', event.type +':', event.path);
 }
 
+
+var bundler;
+function getBundler() {
+  if (!bundler) {
+    bundler = browserify('./index.js', {
+      debug: true,
+      standalone: 'gremlin'
+    });
+  }
+  return bundler;
+}
+
 gulp.task('build', function() {
-  gulp.src('index.js')
-      .pipe(browserify({
-        debug: true,
-        standalone: 'gremlin'
-      }))
-      .pipe(rename('gremlin.js'))
-      .pipe(gulp.dest('./'))
-      .pipe(size({ showFiles: true }))
-      // Minified version
-      .pipe(uglify())
-      .pipe(rename('gremlin.min.js'))
-      .pipe(gulp.dest('./'))
-      .pipe(size({ showFiles: true }));
+  return getBundler()
+    .transform(babelify)
+    .bundle()
+    .on('error', function(err) { console.log('Error: ' + err.message); })
+    .pipe(source('./gremlin.js'))
+    .pipe(gulp.dest('./'))
+    .pipe(buffer())
+    .pipe(size({ showFiles: true }))
+    .pipe(uglify())
+    .pipe(rename('gremlin.min.js'))
+    .pipe(size({ showFiles: true }))
+    .pipe(gulp.dest('./'));
 });
 
-gulp.task('test-node', function() {
-  require('chai').should();
+gulp.task('test', ['test:node', 'test:browsers']);
 
+gulp.task('test:node', function() {
   return gulp.src('test/**/*')
       .pipe(mocha({
         reporter: 'spec',
@@ -44,7 +60,7 @@ gulp.task('test-node', function() {
       .on('error', printError);
 });
 
-gulp.task('test-browsers', function(done) {
+gulp.task('test:browsers', function(done) {
   var karmaCommonConf = {
     browsers: ['Chrome', 'Firefox', 'Safari'],
     frameworks: ['mocha', 'chai', 'browserify'],
@@ -69,4 +85,4 @@ gulp.task('watch', function() {
 
 gulp.task('default', ['build']);
 
-gulp.task('dev', ['test-browsers', 'test-node', 'watch']);
+gulp.task('dev', ['test', 'watch']);

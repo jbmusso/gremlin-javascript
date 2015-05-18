@@ -12,26 +12,18 @@
         console.log("Connection to Gremlin Server established!");
       });
 
-      var script = 'g.V()';
-      var query = client.stream(script);
-
-      query.on('data', function(d) {
-        $("#results").append('<li>'+ JSON.stringify(d) +'</li>');
-      });
-
-      query.on('end', function(d) {
-        $('body').append('All results fetched');
-      });
-
-      query.on('error', function(e) {
-        $('body').append('Could not complete query:', e.message);
+      // var script = 'g.V()';
+      var script = 'asdf';
+      client.execute(script, function(err, data) {
+        if (err) {
+          return $('body').append('Could not complete query:', err.message);
+        }
       });
     });
     </script>
   </head>
 
   <body>
-    <ul id="results">
-    </ul>
+    <h2>Catch and display an error</h2>
   </body>
 </html>
