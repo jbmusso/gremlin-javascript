@@ -3,7 +3,7 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
-var async = require('async');
+var async = require('neo-async');
 
 var WebSocket = require('ws');
 var Guid = require('guid');
