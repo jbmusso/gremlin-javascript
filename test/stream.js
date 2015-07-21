@@ -58,7 +58,7 @@ describe('.stream()', function() {
     });
   });
 
-  it.skip('should handle errors', function(done) {
+  it('should handle errors', function(done) {
     var client = gremlin.createClient();
     // pass a buggy script (missing parenthese)
     var script = 'g.V(';
