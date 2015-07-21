@@ -1,6 +1,6 @@
 {
   "name": "gremlin-client",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "main": "index.js",
   "scripts": {
