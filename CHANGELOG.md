@@ -1,3 +1,9 @@
+## 1.0.1
+- Fix an issue when require'ing with lodash under Linux systems
+
+## 1.0.0
+- Support TinkerPop v3.0.0
+
 ## 0.3.1
 - Handle new response format
 - Better error handling in callback mode
