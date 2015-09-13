@@ -25,10 +25,10 @@
   "homepage": "https://github.com/gulthor/gremlin-client",
   "dependencies": {
     "guid": "0.0.12",
-    "highland": "^1.27.1",
+    "highland": "^2.5.1",
     "lodash": "^3.10.1",
-    "readable-stream": "^1.0.31",
-    "ws": "^0.7.1"
+    "readable-stream": "^2.0.2",
+    "ws": "^0.8.0"
   },
   "devDependencies": {
     "babelify": "^5.0.4",
