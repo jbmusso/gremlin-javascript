@@ -7,7 +7,7 @@ var inherits = require('util').inherits;
 var WebSocket = require('ws');
 var Guid = require('guid');
 var _ = {
-  defaults: require('lodash.defaults')
+  defaults: require('lodash/object/defaults')
 };
 var highland = require('highland');
 

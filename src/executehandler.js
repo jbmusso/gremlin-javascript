@@ -1,7 +1,7 @@
 'use strict';
 var highland = require('highland');
 var _ = {
-  isArray: require('lodash.isArray')
+  isArray: require('lodash/lang/isArray')
 };
 
 function defaultExecuteHandler(messageStream, callback) {
