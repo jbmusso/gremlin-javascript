@@ -1,3 +1,6 @@
+## 1.0.2
+- Properly terminate the stream when handling a 204 NO_CONTENT code (fix #17)
+
 ## 1.0.1
 - Fix an issue when require'ing with lodash under Linux systems
 

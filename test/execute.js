@@ -63,4 +63,16 @@ describe('.execute()', function() {
       done();
     });
   });
+
+  it('should fire the callback with an empty array when handling a 204 NO_CONTENT code', function (done) {
+    // @see https://github.com/jbmusso/gremlin-javascript/issues/17
+    var client = gremlin.createClient();
+    var script = 'g.V().limit(0)';
+
+    client.execute(script, function(err, result) {
+      result.should.be.an('array');
+      result.length.should.equal(0);
+      done();
+    });
+  })
 });

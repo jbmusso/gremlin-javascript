@@ -75,6 +75,7 @@ GremlinClient.prototype.handleMessage = function(event) {
       messageStream.push(null);
       break;
     case 204: // NO_CONTENT
+      messageStream.push(null);
       break;
     case 206: // PARTIAL_CONTENT
       messageStream.push(rawMessage);
