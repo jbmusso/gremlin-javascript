@@ -75,4 +75,15 @@ describe('.execute()', function() {
       done();
     });
   })
+
+  it.only('should not hang when receiving properties', function (done) {
+    var client = gremlin.createClient();
+    var script = 'g.V().next().properties()';
+
+    client.execute(script, function(err, result) {
+      result.should.be.an('array');
+      result.length.should.equal(2);
+      done();
+    });
+  })
 });
