@@ -24,9 +24,9 @@
   },
   "homepage": "https://github.com/gulthor/gremlin-client",
   "dependencies": {
-    "guid": "0.0.12",
     "highland": "^2.5.1",
     "lodash": "^3.10.1",
+    "node-uuid": "^1.4.3",
     "readable-stream": "^2.0.2",
     "ws": "^0.8.0"
   },

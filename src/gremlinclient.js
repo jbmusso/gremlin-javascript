@@ -5,7 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 
 var WebSocket = require('ws');
-var Guid = require('guid');
+var uuid = require('node-uuid');
 var _ = {
   defaults: require('lodash/object/defaults')
 };
@@ -32,7 +32,7 @@ function GremlinClient(port, host, options) {
   this.useSession = this.options.session;
 
   if (this.useSession) {
-    this.sessionId = Guid.create().value;
+    this.sessionId = uuid.v1();
   }
 
   this.connected = false;
@@ -154,7 +154,7 @@ GremlinClient.prototype.buildCommand = function(script, bindings, message) {
   bindings = bindings || {};
 
   var messageStream = new MessageStream({ objectMode: true });
-  var guid = Guid.create().value;
+  var guid = uuid.v1();
   var args = _.defaults(message && message.args || {}, {
     gremlin: script,
     bindings: bindings,

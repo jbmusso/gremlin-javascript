@@ -1,3 +1,6 @@
+## 1.0.3
+- Generate UUID using `node-uuid` instead of `guid`
+
 ## 1.0.2
 - Properly terminate the stream when handling a 204 NO_CONTENT code (fix #17)
 
