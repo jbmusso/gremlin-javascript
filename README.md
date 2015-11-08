@@ -1,14 +1,9 @@
 gremlin-client
 ==============
 
-A proof of concept WebSocket JavaScript client for TinkerPop3 Gremlin Server.
-
-Tested with Node.js v0.10.29 and v0.11.13.
-Tested with Chrome 35, Firefox 28, Safari 7.
+A WebSocket JavaScript client for TinkerPop3 Gremlin Server. Works in Node.js and modern browsers.
 
 ## Installation
-
-Gremlin Client is an AMD/CommonJS module that works in both Node.js and WebSocket enabled browsers.
 
 ```
 npm install gremlin-client --save
