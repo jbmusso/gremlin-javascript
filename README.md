@@ -1,12 +1,12 @@
-gremlin-client
-==============
+gremlin-javascript
+==================
 
 A WebSocket JavaScript client for TinkerPop3 Gremlin Server. Works in Node.js and modern browsers.
 
 ## Installation
 
 ```
-npm install gremlin-client --save
+npm install gremlin --save
 ```
 
 In the browser, you can require the module with browserify or directly insert a `<script>` tag, which will expose a global `gremlin` variable:
@@ -20,7 +20,7 @@ In the browser, you can require the module with browserify or directly insert a 
 
 ```javascript
 // Assuming Node.js or Browser environment with browserify:
-var gremlin = require('gremlin-client');
+var gremlin = require('gremlin');
 
 // Will open a WebSocket to ws://localhost:8182 by default
 var client = gremlin.createClient();
