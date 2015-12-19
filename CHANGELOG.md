@@ -1,3 +1,6 @@
+## 2.0.0
+- Rename package to gremlin
+
 ## 1.0.3
 - Generate UUID using `node-uuid` instead of `guid`
 
