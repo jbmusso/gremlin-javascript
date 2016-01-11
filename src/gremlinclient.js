@@ -1,6 +1,5 @@
 /*jslint -W079 */
 /*jslint node: true */
-'use strict';
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 
@@ -11,7 +10,7 @@ var _ = {
 };
 var highland = require('highland');
 
-var MessageStream = require('./messagestream');
+import MessageStream from './messagestream';
 
 
 var executeHandler = require('./executehandler');

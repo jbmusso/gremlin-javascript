@@ -1,6 +1,6 @@
 /*jshint -W030 */
 'use strict';
-var gremlin = require('../');
+import gremlin from '../';
 
 describe('Bindings', function() {
   it('should support bindings with client.execute()', function(done) {

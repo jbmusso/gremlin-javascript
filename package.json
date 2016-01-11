@@ -2,10 +2,14 @@
   "name": "gremlin",
   "version": "2.0.0",
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "build": "gulp build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "babel ./src -d lib",
+    "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
+    "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
+    "build:watch": "npm run build -- --watch",
+    "test:node": "mocha ./test --compilers js:babel-register --recursive",
+    "test:node:watch": "npm run test:node -- --watch"
   },
   "repository": {
     "type": "git",
@@ -32,6 +36,11 @@
     "ws": "^0.8.0"
   },
   "devDependencies": {
+    "babel-core": "^6.4.0",
+    "babel-loader": "^6.2.1",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-2": "^6.3.13",
+    "babel-register": "^6.3.13",
     "babelify": "^5.0.4",
     "browserify": "^9.0.3",
     "chai": "^2.1.1",
@@ -52,6 +61,7 @@
     "mocha": "^1.21.4",
     "serve-static": "^1.5.3",
     "vinyl-source-stream": "^1.0.0",
+    "webpack": "^1.12.11",
     "yargs": "^1.3.1"
   }
 }

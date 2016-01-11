@@ -1,4 +1,3 @@
-'use strict';
 var highland = require('highland');
 var _ = {
   isArray: require('lodash/lang/isArray')
