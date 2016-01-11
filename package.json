@@ -4,6 +4,7 @@
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "main": "index.js",
   "scripts": {
+    "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -35,7 +36,7 @@
     "browserify": "^9.0.3",
     "chai": "^2.1.1",
     "finalhandler": "^0.1.0",
-    "gulp": "^3.8.8",
+    "gulp": "^3.9.0",
     "gulp-buffer": "0.0.2",
     "gulp-mocha": "^2.0.0",
     "gulp-rename": "^1.2.0",
