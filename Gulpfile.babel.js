@@ -1,14 +1,15 @@
 'use strict';
-var gulp = require('gulp');
-var browserify = require('browserify');
-var babelify = require('babelify');
-var source = require('vinyl-source-stream');
+import gulp  from 'gulp';
+import browserify  from 'browserify';
+import babelify  from 'babelify';
+import source  from 'vinyl-source-stream';
 
-var buffer = require('gulp-buffer');
-var uglify = require('gulp-uglify');
-var size = require('gulp-size');
-var rename = require('gulp-rename');
-var mocha = require('gulp-mocha');
+import buffer  from 'gulp-buffer';
+import uglify  from 'gulp-uglify';
+import size  from 'gulp-size';
+import rename  from 'gulp-rename';
+import mocha  from 'gulp-mocha';
+
 var karma = require('karma').server;
 var args = require('yargs').argv;
 
@@ -34,7 +35,7 @@ function getBundler() {
   return bundler;
 }
 
-gulp.task('build', function() {
+gulp.task('build', () => {
   return getBundler()
     .transform(babelify)
     .bundle()
@@ -51,7 +52,7 @@ gulp.task('build', function() {
 
 gulp.task('test', ['test:node', 'test:browsers']);
 
-gulp.task('test:node', function() {
+gulp.task('test:node', () => {
   return gulp.src('test/**/*')
       .pipe(mocha({
         reporter: 'spec',
@@ -60,8 +61,8 @@ gulp.task('test:node', function() {
       .on('error', printError);
 });
 
-gulp.task('test:browsers', function(done) {
-  var karmaCommonConf = {
+gulp.task('test:browsers', (done) => {
+  const karmaCommonConf = {
     browsers: ['Chrome', 'Firefox', 'Safari'],
     frameworks: ['mocha', 'chai', 'browserify'],
     preprocessors: {
