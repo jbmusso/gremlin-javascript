@@ -142,14 +142,14 @@ class GremlinClient extends EventEmitter {
   };
 
   /**
-   * For a given script string and optional bound parameters, build a command
-   * object to be sent to Gremlin Server.
+   * For a given script string and optional bound parameters, build a protocol
+   * message object to be sent to Gremlin Server.
    *
    * @param {String|Function} script
    * @param {Object} bindings
    * @param {Object} message
    */
-  buildCommand(script, bindings = {}, baseMessage = {}) {
+  buildMessage(script, bindings = {}, baseMessage = {}) {
     const gremlin = (typeof script === 'function') ? Utils.extractFunctionBody(script) : script;
     const { processor, op, accept, language } = this.options;
 
@@ -163,17 +163,14 @@ class GremlinClient extends EventEmitter {
       args,
       ...baseMessage
     };
-    const messageStream = new MessageStream({ objectMode: true });
-
-    const command = { message, messageStream };
 
     if (this.useSession) {
       // Assume that people want to use the 'session' processor unless specified
-      command.message.processor = message.processor || processor || 'session';
-      command.message.args.session = this.sessionId;
+      message.processor = message.processor || processor || 'session';
+      message.args.session = this.sessionId;
     }
 
-    return command;
+    return message;
   };
 
   sendMessage(message) {
@@ -261,12 +258,17 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    * @return {MessageStream}
    */
-  messageStream(script, bindings, message) {
-    const command = this.buildCommand(script, bindings, message);
+  messageStream(script, bindings, rawMessage) {
+    let stream = new MessageStream({ objectMode: true });
+
+    const command = {
+      message: this.buildMessage(script, bindings, rawMessage),
+      messageStream: stream
+    };
 
     this.sendCommand(command); //todo improve for streams
 
-    return command.messageStream;
+    return stream;
   };
 
   /**
