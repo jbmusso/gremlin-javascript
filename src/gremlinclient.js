@@ -9,6 +9,7 @@ import highland from 'highland';
 
 import MessageStream from './messagestream';
 import executeHandler from './executehandler';
+import * as Utils from './utils';
 
 
 class GremlinClient extends EventEmitter {
@@ -149,7 +150,7 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    */
   buildCommand(script, bindings = {}, baseMessage = {}) {
-    const gremlin = (typeof script === 'function') ? this.extractFunctionBody(script) : script;
+    const gremlin = (typeof script === 'function') ? Utils.extractFunctionBody(script) : script;
     const { processor, op, accept, language } = this.options;
 
     const baseArgs = { gremlin, bindings, accept, language };
@@ -177,19 +178,6 @@ class GremlinClient extends EventEmitter {
 
   sendMessage(message) {
     this.ws.send(JSON.stringify(message));
-  };
-
-  /**
-   * Get the inner function body from a function.toString() representation
-   *
-   * @param {Function}
-   * @return {String}
-   */
-  extractFunctionBody(fn) {
-    const body = fn.toString();
-    const trimmedBody = body.substring(body.indexOf('{') + 1, body.lastIndexOf('}'));
-
-    return trimmedBody;
   };
 
   /**
