@@ -1,6 +1,6 @@
 /*jshint -W030 */
-'use strict';
-var gremlin = require('../');
+import gremlin from '../';
+
 
 describe('.execute()', function() {
   it('should return a result and a response', function(done) {

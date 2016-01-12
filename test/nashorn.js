@@ -1,5 +1,6 @@
 /*jshint -W030 */
-var gremlin = require('../');
+import gremlin from '../';
+
 
 describe('Nashorn syntax', function() {
   it.skip('should handle .localeCompare() as replacement for <=> operator', function() {

@@ -1,7 +1,7 @@
-var GremlinClient = require('./gremlinclient');
+import GremlinClient from './gremlinclient';
 
 
-module.exports.createClient = function(port, host, options) {
+function createClient(port, host, options) {
   if (typeof port === 'object') {
     options = port;
     port = undefined;
@@ -13,4 +13,8 @@ module.exports.createClient = function(port, host, options) {
   }
 
   return new GremlinClient(port, host, options);
+};
+
+module.exports = {
+  createClient
 };

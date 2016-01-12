@@ -1,4 +1,5 @@
-var gremlin = require('../');
+import gremlin from '../';
+
 
 describe('.messageStream', function() {
   it('should return a stream of low level messages', function(done) {

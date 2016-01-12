@@ -1,5 +1,5 @@
-'use strict';
-var gremlin = require('../');
+import gremlin from '../';
+
 
 describe('.createClient()', function() {
   it('should create a client with default options', function() {

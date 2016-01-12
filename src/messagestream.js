@@ -1,16 +1,14 @@
-var inherits = require('util').inherits;
-var ReadableStream = require('readable-stream');
+import ReadableStream from 'readable-stream';
 
 
-function MessageStream() {
-  ReadableStream.apply(this, arguments);
+class MessageStream extends ReadableStream {
+  constructor(...args) {
+    super(...args)
+  }
+
+  _read() {
+    this._paused = false;
+  }
 }
 
-inherits(MessageStream, ReadableStream);
-
-MessageStream.prototype._read = function() {
-  this._paused = false;
-};
-
-
-module.exports = MessageStream;
+export default MessageStream;

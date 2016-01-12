@@ -1,6 +1,6 @@
 /*jshint -W030 */
-'use strict';
-var gremlin = require('../');
+import gremlin from '../';
+
 
 describe('.execute() # nashorn', function() {
   it('should process raw JavaScript strings', function(done) {

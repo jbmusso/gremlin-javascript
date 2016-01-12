@@ -1,5 +1,4 @@
-'use strict';
-var gremlin = require('../');
+import gremlin from '../';
 
 
 describe('.stream()', function() {
