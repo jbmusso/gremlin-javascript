@@ -44,13 +44,18 @@ class GremlinClient extends EventEmitter {
 
     this.ws.onopen = this.onConnectionOpen.bind(this);
 
-    this.ws.onerror = (e) => {
-      console.log('Error:', e);
+    this.ws.onerror = (err) => {
+      this.handleError(err)
     };
 
     this.ws.onmessage = (message) => this.handleProtocolMessage(message);
 
     this.ws.onclose = (event) => this.handleDisconnection(event);
+  }
+
+  handleError(err) {
+    this.connected = false,
+    this.emit('error', err);
   }
 
   /**
