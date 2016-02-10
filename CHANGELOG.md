@@ -1,3 +1,6 @@
+## 2.0.1
+- Remap 'undefined' bindings as 'null' values, preventing Gremlin script execution failures
+
 ## 2.0.0
 - Rename package to gremlin
 
