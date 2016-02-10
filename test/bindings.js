@@ -38,4 +38,27 @@ describe('Bindings', function() {
       done();
     });
   });
+
+  describe('undefined bindings', function () {
+    it(`should remap 'undefined' bindings as 'null' values`, (done) => {
+      const client = gremlin.createClient();
+
+      client.execute('foo', { foo: undefined }, (err, [foo]) => {
+        (err === null).should.be.true;
+        (foo === null).should.be.true;
+        done();
+      });
+    });
+
+    it(`should not remap falsey bindings as 'null' values`, (done) => {
+      const client = gremlin.createClient();
+
+      client.execute('[foo, bar]', { foo: '', bar: 0 }, (err, [foo, bar]) => {
+        (err === null).should.be.true;
+        (foo === '').should.be.true;
+        (bar === 0).should.be.true;
+        done();
+      });
+    });
+  })
 });

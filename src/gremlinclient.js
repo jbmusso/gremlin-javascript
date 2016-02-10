@@ -154,9 +154,13 @@ class GremlinClient extends EventEmitter {
    * @param {Object} bindings
    * @param {Object} message
    */
-  buildMessage(script, bindings = {}, baseMessage = {}) {
+  buildMessage(script, rawBindings = {}, baseMessage = {}) {
     const gremlin = (typeof script === 'function') ? Utils.extractFunctionBody(script) : script;
     const { processor, op, accept, language } = this.options;
+
+    // Remap 'undefined' bindings as 'null' values that would otherwise result
+    // in missing/unbound variables in the Gremlin script execution context.
+    const bindings = _.mapValues(rawBindings, (value) => _.isUndefined(value) ? null : value);
 
     const baseArgs = { gremlin, bindings, accept, language };
     const args = _.defaults(baseMessage.args || {}, baseArgs);
