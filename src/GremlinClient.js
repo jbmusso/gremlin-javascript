@@ -2,11 +2,11 @@
 /*jslint node: true */
 import { EventEmitter } from 'events';
 
-import WebSocket from 'ws';
 import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
 
+import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
 import executeHandler from './executeHandler';
 import * as Utils from './utils';
@@ -39,22 +39,16 @@ class GremlinClient extends EventEmitter {
 
     this.commands = {};
 
-    // Open websocket connection
-    this.ws = new WebSocket('ws://'+ this.host +':'+ this.port);
+    this.connection = new WebSocketGremlinConnection({ port, host });
 
-    this.ws.onopen = this.onConnectionOpen.bind(this);
-
-    this.ws.onerror = (err) => {
-      this.handleError(err)
-    };
-
-    this.ws.onmessage = (message) => this.handleProtocolMessage(message);
-
-    this.ws.onclose = (event) => this.handleDisconnection(event);
+    this.connection.on('open', () => this.onConnectionOpen());
+    this.connection.on('error', (error) => this.handleError(error));
+    this.connection.on('message', (message) => this.handleProtocolMessage(message));
+    this.connection.on('close', (event) => this.handleDisconnection(event));
   }
 
   handleError(err) {
-    this.connected = false,
+    this.connected = false;
     this.emit('error', err);
   }
 
@@ -183,7 +177,8 @@ class GremlinClient extends EventEmitter {
   };
 
   sendMessage(message) {
-    this.ws.send(JSON.stringify(message));
+    const serializedMessage = JSON.stringify(message);
+    this.connection.sendMessage(serializedMessage);
   };
 
   /**
