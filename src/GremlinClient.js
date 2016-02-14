@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
+import retry from 'retry';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
@@ -25,8 +26,9 @@ class GremlinClient extends EventEmitter {
       processor: '',
       accept: 'application/json',
       executeHandler,
+      retryConnect: {}, // A default 'retry' option object
       ...options
-    }
+    };
 
     this.useSession = this.options.session;
 
@@ -114,7 +116,40 @@ class GremlinClient extends EventEmitter {
       message: 'WebSocket closed',
       details: event
     });
+
+    this.reconnect((err, currentAttempt) => {
+      if (err) {
+        this.emit('error', err);
+        return;
+      }
+
+      this.emit('reconnect', { currentAttempt });
+    });
   };
+
+  reconnect(callback) {
+    const operation = retry.operation(this.options.retryConnect);
+    const { port, host } = this;
+
+    operation.attempt((currentAttempt) => {
+      const connection = this.createConnection({ port, host });
+
+      connection.once('error', (err) => {
+        if (operation.retry(err)) {
+          this.emit('reconnecting', { currentAttempt });
+          return;
+        }
+
+        callback(err ? operation.mainError() : null);
+      });
+
+      connection.once('open', () => {
+        callback(null, { currentAttempt });
+      });
+
+      this.connection = connection;
+    });
+  }
 
   /**
    * Process the current command queue, sending commands to Gremlin Server

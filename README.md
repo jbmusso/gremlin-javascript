@@ -14,6 +14,12 @@ In the browser, you can require the module with browserify or directly insert a 
 <script type="text/javascript" src="gremlin.js"></script>
 ```
 
+## Features
+
+* supports any Gremlin script execution engine, including `gremlin-groovy` (default) and `nashorn` (JavaScript)
+* callback and stream async API
+* automatic WebSocket reconnection, configurable the `[retry]`(https://www.npmjs.com/package/retry) package.
+
 ## Usage
 
 ### Creating a new client
@@ -41,6 +47,7 @@ The `options` object currently allows you to set the following options:
 * `op` (advanced usage): The name of the "operation" to execute based on the available OpProcessor (default: `"eval"`)
 * `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
+* `retryConnect`: the `[retry]`(https://www.npmjs.com/package/retry) strategy to use when attempting to connect/reconnect to Gremlin server
 
 ### Sending scripts to Gremlin Server for execution
 The client supports three modes:
