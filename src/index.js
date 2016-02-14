@@ -1,7 +1,7 @@
 import GremlinClient from './GremlinClient';
 
 
-function createClient(port, host, options) {
+export function createClient(port, host, options) {
   if (typeof port === 'object') {
     options = port;
     port = undefined;
@@ -15,6 +15,7 @@ function createClient(port, host, options) {
   return new GremlinClient(port, host, options);
 };
 
-module.exports = {
+
+export default {
   createClient
-};
+}
