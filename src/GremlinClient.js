@@ -39,12 +39,18 @@ class GremlinClient extends EventEmitter {
 
     this.commands = {};
 
-    this.connection = new WebSocketGremlinConnection({ port, host });
+    this.connection = this.createConnection({ port, host });
+  }
 
-    this.connection.on('open', () => this.onConnectionOpen());
-    this.connection.on('error', (error) => this.handleError(error));
-    this.connection.on('message', (message) => this.handleProtocolMessage(message));
-    this.connection.on('close', (event) => this.handleDisconnection(event));
+  createConnection({ port, host }) {
+    const connection = new WebSocketGremlinConnection({ port, host });
+
+    connection.on('open', () => this.onConnectionOpen());
+    connection.on('error', (error) => this.handleError(error));
+    connection.on('message', (message) => this.handleProtocolMessage(message));
+    connection.on('close', (event) => this.handleDisconnection(event))
+
+    return connection;
   }
 
   handleError(err) {
