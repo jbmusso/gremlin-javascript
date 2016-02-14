@@ -7,8 +7,8 @@ import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
 
-import MessageStream from './messagestream';
-import executeHandler from './executehandler';
+import MessageStream from './MessageStream';
+import executeHandler from './executeHandler';
 import * as Utils from './utils';
 
 

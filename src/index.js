@@ -1,4 +1,4 @@
-import GremlinClient from './gremlinclient';
+import GremlinClient from './GremlinClient';
 
 
 function createClient(port, host, options) {
