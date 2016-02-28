@@ -9,25 +9,36 @@ A WebSocket JavaScript client for TinkerPop3 Gremlin Server. Works in Node.js an
 npm install gremlin --save
 ```
 
-In the browser, you can require the module with browserify or directly insert a `<script>` tag, which will expose a global `gremlin` variable:
-```html
-<script type="text/javascript" src="gremlin.js"></script>
-```
-
 ## Quick start
 
-```
+```javascript
 import { createClient } from 'gremlin';
 
-const gremlinClient = createClient();
+const client = createClient();
 
-gremlinClient.execute('g.V', (err, results) => {
+client.execute('g.V().has("name", name)', { name: 'Alice' }, (err, results) => {
   if (err) {
     return console.error(err)
   }
 
   console.log(results);
 });
+```
+
+### Using ES2015/2016
+
+```javascript
+import { createClient, makeTemplateTag } from 'gremlin';
+
+const client = createClient();
+const gremlin = makeTemplateTag(client);
+
+const fetchByName = async (name) => {
+  const users = await gremlin`g.V().has('name', ${name})`;
+  console.log(users);
+}
+
+fetchByName('Alice');
 ```
 
 ## Usage
@@ -58,14 +69,74 @@ The `options` object currently allows you to set the following options:
 * `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
 
-### Sending scripts to Gremlin Server for execution
+### Executing Gremlin queries
 
 The client currently supports three modes:
-* streaming results
 * callback mode (with internal buffer)
+* promise mode
+* streaming moderesults
 * streaming protocol messages (low level API, for advanced usages)
 
-#### Stream mode: client.stream(script, bindings, message)
+#### Callback mode: client.execute(script, bindings, message, callback)
+
+Will execute the provided callback when all results are actually returned from the server.
+
+```javascript
+client.execute('g.V()', (err, results) => {
+  if (!err) {
+    console.log(results) // notice how results is *always* an array
+  }
+});
+```
+
+The client will internally concatenate all partial results returned over different messages (depending on the total number of results and the value of `resultIterationBatchSize` set in your .yaml file).
+
+When the client receives the final `statusCode: 299` message, the callback will be executed.
+
+#### Promise/template mode: Gremlin.makeTemplateTag(client);
+
+The EcmaScript2015 specification added support for Promise and tagged template literals to JavaScript. Gremlin client leverages these features and offers an alternative way to execute Gremlin queries.
+
+`makeTemplateTag(client)` will return a template function, or 'tag', bound to a given Gremlin client instance. Calling that template will return a `Promise` of execution of the given script using the registered client, while simultaneously escaping all parameters for performance and security concerns.
+
+```javascript
+import { createClient, makeTemplateTag } from 'gremlin';
+
+const client = createClient();
+const gremlin = makeTemplateTag(client);
+
+gremlin`g.V().has('name', ${name})` // template tag that returns a Promise
+  .then((vertices) => {
+    console.log(vertices)
+  })
+  .catch((err) => {
+    // Something went wrong
+  })
+```
+
+For easier debugging, you can also preview the raw query sent to Gremlin server:
+```javascript
+const name = 'Bob';
+const { query } = gremlin`g.V().has('name', ${name})`;
+console.log(query);
+// output:
+//   { gremlin: 'g.V().has(\'name\', p1)', bindings: { p1: 'Bob' } }
+```
+
+Because the `gremlin` template literal returns a `Promise`, it can be used in conjunction with the async function proposal from ES2016 to execute Gremlin queries with a shortened syntax:
+
+```javascript
+const fetchByName = async (name) => {
+  const users = await gremlin`g.V().has('name', ${name})`;
+  console.log(users);
+}
+
+fetchByName('Alice');
+```
+
+#### Stream mode
+
+##### client.stream(script, bindings, message)
 
 Return a Node.js ReadableStream set in Object mode. The stream emits a distinct `data` event per query result returned by Gremlin Server.
 
@@ -91,23 +162,7 @@ query.on('end', () => {
 
 This allows you to effectively `.pipe()` the stream to any other Node.js WritableStream/TransformStream.
 
-#### Callback mode: client.execute(script, bindings, message, callback)
-
-Will execute the provided callback when all results are actually returned from the server.
-
-```javascript
-client.execute('g.V()', (err, results) => {
-  if (!err) {
-    console.log(results) // notice how results is *always* an array
-  }
-});
-```
-
-The client will internally concatenate all partial results returned over different messages (depending on the total number of results and the value of `resultIterationBatchSize` set in your .yaml file).
-
-When the client receives the final `statusCode: 299` message, the callback will be executed.
-
-#### Message stream mode: client.messageStream(script, bindings, message)
+##### client.messageStream(script, bindings, message)
 
 A lower level method that returns a `ReadableStream` which emits the raw protocol messages returned by Gremlin Server as distinct `data` events.
 
