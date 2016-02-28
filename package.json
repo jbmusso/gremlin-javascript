@@ -46,6 +46,7 @@
     "browserify": "^9.0.3",
     "chai": "^2.1.1",
     "finalhandler": "^0.1.0",
+    "gremlin-template-string": "^2.0.0",
     "gulp": "^3.9.0",
     "gulp-buffer": "0.0.2",
     "gulp-mocha": "^2.0.0",

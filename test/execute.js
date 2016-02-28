@@ -1,5 +1,6 @@
 /*jshint -W030 */
 import gremlin from '../';
+import g from 'gremlin-template-string';
 
 
 describe('.execute()', function() {
@@ -49,6 +50,30 @@ describe('.execute()', function() {
     client.execute('g.V(x)', { x: 1 }, { args: { language: 'nashorn' }}, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
+      done();
+    });
+  });
+
+  it('should handle an object as first argument', (done) => {
+    const client = gremlin.createClient();
+    const id = 1;
+    const query = g`g.V(${id})`;
+
+    client.execute(query, (err, result) => {
+      (err === null).should.be.true;
+      result.length.should.equal(1);
+      done();
+    });
+  });
+
+  it('should merge bindings with first-argument object own params', (done) => {
+    const client = gremlin.createClient();
+    const id = 1;
+    const query = g`g.V(${id}, second)`;
+
+    client.execute(query, { second: 2 }, (err, result) => {
+      (err === null).should.be.true;
+      result.length.should.equal(2);
       done();
     });
   });

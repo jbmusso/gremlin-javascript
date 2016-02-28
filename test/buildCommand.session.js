@@ -27,7 +27,7 @@ describe('.buildMessage()', function() {
 
       var client = gremlin.createClient(8182, 'localhost', { session: true });
 
-      var message = client.buildMessage(null, null, { processor: customProcessor });
+      var message = client.buildMessage(undefined, undefined, { processor: customProcessor });
 
       message.processor.should.equal(customProcessor);
     });

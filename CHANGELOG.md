@@ -1,3 +1,6 @@
+## 2.1.0
+- Add support for execution of query object supporting TinkerPop3 protocol-level signature (shape: `{ gremlin: <String>, bindings: <Object> }`)
+
 ## 2.0.1
 - Remap 'undefined' bindings as 'null' values, preventing Gremlin script execution failures
 
