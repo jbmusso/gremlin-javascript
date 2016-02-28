@@ -1,6 +1,4 @@
-/*jshint -W030 */
 import gremlin from '../';
-import g from 'gremlin-template-string';
 
 
 describe('.execute()', function() {
@@ -56,24 +54,35 @@ describe('.execute()', function() {
 
   it('should handle an object as first argument', (done) => {
     const client = gremlin.createClient();
-    const id = 1;
-    const query = g`g.V(${id})`;
+    const query = {
+      gremlin: 'g.V(vid)',
+      bindings: {
+        vid: 1
+      }
+    };
 
     client.execute(query, (err, result) => {
       (err === null).should.be.true;
       result.length.should.equal(1);
+      result[0].id.should.equal(1);
       done();
     });
   });
 
   it('should merge bindings with first-argument object own params', (done) => {
     const client = gremlin.createClient();
-    const id = 1;
-    const query = g`g.V(${id}, second)`;
+    const query = {
+      gremlin: 'g.V(vid, second)',
+      bindings: {
+        vid: 1
+      }
+    };
 
     client.execute(query, { second: 2 }, (err, result) => {
       (err === null).should.be.true;
       result.length.should.equal(2);
+      result[0].id.should.equal(1);
+      result[1].id.should.equal(2);
       done();
     });
   });
