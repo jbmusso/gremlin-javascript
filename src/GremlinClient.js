@@ -84,12 +84,14 @@ class GremlinClient extends EventEmitter {
         messageStream.push(null);
         break;
       case 204: // NO_CONTENT
+        delete this.commands[requestId];
         messageStream.push(null);
         break;
       case 206: // PARTIAL_CONTENT
         messageStream.push(rawMessage);
         break;
       default:
+        delete this.commands[requestId];
         messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
         break;
     }
