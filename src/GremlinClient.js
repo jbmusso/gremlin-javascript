@@ -65,36 +65,41 @@ class GremlinClient extends EventEmitter {
    * @param {MessageEvent} event
    */
   handleProtocolMessage(message) {
-    const rawMessage = JSON.parse(message.data || message); // Node.js || Browser API
-    const {
-      requestId,
-      status: {
-        code: statusCode,
-        message:  statusMessage
+    const reader = new FileReader();
+    reader.addEventListener("loadend", (function() {
+      const messageData = String.fromCharCode.apply(null, new Uint8Array(reader.result));
+      const rawMessage = JSON.parse(messageData);
+      const {
+        requestId,
+        status: {
+          code: statusCode,
+          message:  statusMessage
+        }
+      } = rawMessage;
+
+      const { messageStream } = this.commands[requestId];
+
+
+      switch (statusCode) {
+        case 200: // SUCCESS
+          delete this.commands[requestId]; // TODO: optimize performance
+          messageStream.push(rawMessage);
+          messageStream.push(null);
+          break;
+        case 204: // NO_CONTENT
+          delete this.commands[requestId];
+          messageStream.push(null);
+          break;
+        case 206: // PARTIAL_CONTENT
+          messageStream.push(rawMessage);
+          break;
+        default:
+          delete this.commands[requestId];
+          messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
+          break;
       }
-    } = rawMessage;
-
-    const { messageStream } = this.commands[requestId];
-
-
-    switch (statusCode) {
-      case 200: // SUCCESS
-        delete this.commands[requestId]; // TODO: optimize performance
-        messageStream.push(rawMessage);
-        messageStream.push(null);
-        break;
-      case 204: // NO_CONTENT
-        delete this.commands[requestId];
-        messageStream.push(null);
-        break;
-      case 206: // PARTIAL_CONTENT
-        messageStream.push(rawMessage);
-        break;
-      default:
-        delete this.commands[requestId];
-        messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
-        break;
-    }
+    }).bind(this));
+    reader.readAsArrayBuffer(message.data || message); // Node.js || Browser API
   }
 
   /**
@@ -181,8 +186,15 @@ class GremlinClient extends EventEmitter {
   };
 
   sendMessage(message) {
-    const serializedMessage = JSON.stringify(message);
-    this.connection.sendMessage(serializedMessage);
+    const serializedMessage = this.options.accept + JSON.stringify(message);
+
+    //Lets start packing the message into binary
+    var pack = new Uint8Array(1 + serializedMessage.length);//mimeLength(1) + mimeType Length + serializedMessage Length
+    pack[0] = this.options.accept.length;
+    for (var i = 0, len = serializedMessage.length; i < len; i++) {
+      pack[i+1] = serializedMessage.charCodeAt(i);
+    }
+    this.connection.sendMessage(pack);
   };
 
   /**
