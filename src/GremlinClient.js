@@ -66,7 +66,7 @@ class GremlinClient extends EventEmitter {
    */
   handleProtocolMessage(message) {
     const reader = new FileReader();
-    reader.addEventListener("loadend", (function() {
+    reader.addEventListener("loadend", () => {
       const messageData = String.fromCharCode.apply(null, new Uint8Array(reader.result));
       const rawMessage = JSON.parse(messageData);
       const {
@@ -98,7 +98,7 @@ class GremlinClient extends EventEmitter {
           messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
           break;
       }
-    }).bind(this));
+    });
     reader.readAsArrayBuffer(message.data || message); // Node.js || Browser API
   }
 
@@ -189,9 +189,9 @@ class GremlinClient extends EventEmitter {
     const serializedMessage = this.options.accept + JSON.stringify(message);
 
     //Lets start packing the message into binary
-    var pack = new Uint8Array(1 + serializedMessage.length);//mimeLength(1) + mimeType Length + serializedMessage Length
+    let pack = new Uint8Array(1 + serializedMessage.length);//mimeLength(1) + mimeType Length + serializedMessage Length
     pack[0] = this.options.accept.length;
-    for (var i = 0, len = serializedMessage.length; i < len; i++) {
+    for (let i = 0, len = serializedMessage.length; i < len; i++) {
       pack[i+1] = serializedMessage.charCodeAt(i);
     }
     this.connection.sendMessage(pack);
