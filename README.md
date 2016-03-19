@@ -68,6 +68,7 @@ The `options` object currently allows you to set the following options:
 * `op` (advanced usage): The name of the "operation" to execute based on the available OpProcessor (default: `"eval"`)
 * `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
+* `path`: a custom URL connection path if connecting to a Gremlin server behind a WebSocket proxy
 
 ### Executing Gremlin queries
 

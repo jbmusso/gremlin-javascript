@@ -13,10 +13,13 @@ import * as Utils from './utils';
 
 
 class GremlinClient extends EventEmitter {
-  constructor(port = 8182, host = 'localhost', options) {
+  constructor(port = 8182, host = 'localhost', options = {}) {
     super();
+
     this.port = port;
     this.host = host;
+
+    const { path = '' } = options;
 
     this.options = {
       language: 'gremlin-groovy',
@@ -25,7 +28,8 @@ class GremlinClient extends EventEmitter {
       processor: '',
       accept: 'application/json',
       executeHandler,
-      ...options
+      ...options,
+      path: path.length && !path.startsWith('/') ? `/${path}` : path
     }
 
     this.useSession = this.options.session;
@@ -39,11 +43,15 @@ class GremlinClient extends EventEmitter {
 
     this.commands = {};
 
-    this.connection = this.createConnection({ port, host });
+    this.connection = this.createConnection({
+      port,
+      host,
+      path: this.options.path
+    });
   }
 
-  createConnection({ port, host }) {
-    const connection = new WebSocketGremlinConnection({ port, host });
+  createConnection({ port, host, path }) {
+    const connection = new WebSocketGremlinConnection({ port, host, path });
 
     connection.on('open', () => this.onConnectionOpen());
     connection.on('error', (error) => this.handleError(error));

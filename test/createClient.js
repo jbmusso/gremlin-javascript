@@ -64,4 +64,18 @@ describe('.createClient()', function() {
       done();
     });
   });
+
+  describe('WebSocket path', () => {
+    it('should support a custom websocket path', () => {
+      const client = gremlin.createClient({ path: '/foo/bar' });
+
+      client.options.path.should.equal('/foo/bar');
+    });
+
+    it('should ensure path is prefixed with a slash', () => {
+      const client = gremlin.createClient({ path: 'foo/bar' });
+
+      client.options.path.should.equal('/foo/bar');
+    });
+  });
 });
