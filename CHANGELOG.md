@@ -1,3 +1,7 @@
+## 2.2.0
+- Add `path` option for setting custom URL connection path
+- Fix: delete pending commands for all received messages except Code 206
+
 ## 2.1.0
 - Add support for execution of query object supporting TinkerPop3 protocol-level signature (shape: `{ gremlin: <String>, bindings: <Object> }`)
 
