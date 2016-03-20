@@ -8,7 +8,8 @@
     "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
     "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
     "build:watch": "npm run build -- --watch",
-    "test:node": "mocha ./test --compilers js:babel-register --recursive",
+    "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
+    "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
     "test:node:watch": "npm run test:node -- --watch"
   },
   "repository": {
@@ -56,6 +57,7 @@
     "gulp-rename": "^1.2.0",
     "gulp-size": "^1.0.0",
     "gulp-uglify": "^0.3.1",
+    "istanbul": "^0.4.2",
     "karma": "^0.12.31",
     "karma-browserify": "^0.2.1",
     "karma-chai": "^0.1.0",
