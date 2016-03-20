@@ -21,3 +21,6 @@ before_script:
   - npm run build
 
 script: npm run test:node
+
+after_script:
+  - npm run coverage:travis

@@ -9,6 +9,7 @@
     "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
     "build:watch": "npm run build -- --watch",
     "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
+    "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
     "test:node:watch": "npm run test:node -- --watch"
   },
@@ -66,6 +67,7 @@
     "karma-mocha": "^0.1.10",
     "karma-safari-launcher": "^0.1.1",
     "mocha": "^1.21.4",
+    "mocha-lcov-reporter": "^1.2.0",
     "serve-static": "^1.5.3",
     "vinyl-source-stream": "^1.0.0",
     "webpack": "^1.12.11",
