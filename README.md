@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jbmusso/gremlin-javascript.svg?branch=master)](https://travis-ci.org/jbmusso/gremlin-javascript) [![Coverage Status](https://coveralls.io/repos/github/jbmusso/gremlin-javascript/badge.svg?branch=master)](https://coveralls.io/github/jbmusso/gremlin-javascript?branch=master)
+
 gremlin-javascript
 ==================
 

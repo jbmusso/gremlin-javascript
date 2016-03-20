@@ -3,3 +3,4 @@ npm-debug.log
 lib
 umd
 /coverage
+.coveralls.yml
