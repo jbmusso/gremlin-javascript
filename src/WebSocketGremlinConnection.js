@@ -15,6 +15,7 @@ export default class WebSocketGremlinConnection extends EventEmitter {
     this.ws.onerror = (err) => this.handleError(err);
     this.ws.onmessage = (message) => this.handleMessage(message);
     this.ws.onclose = (event) => this.onClose(event);
+    this.ws.binaryType = "arraybuffer";
   }
 
   onOpen() {
