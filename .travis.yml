@@ -8,7 +8,6 @@ sudo: required
 
 env:
   - GREMLINSERVER_VERSION="3.1.1"
-  - GREMLINSERVER_VERSION="3.1.0"
 
 install:
   # install Oracle JDK8
