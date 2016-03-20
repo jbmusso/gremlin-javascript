@@ -2,17 +2,21 @@ language: node_js
 
 node_js:
   - 5.9
+  - 5
 
 sudo: required
 
 env:
-  - GREMLINSERVER_VERSION="3.0.0"
+  - GREMLINSERVER_VERSION="3.1.1"
+  - GREMLINSERVER_VERSION="3.1.0"
 
 install:
   # install Oracle JDK8
   - sh -c ./build/jdk8-install.sh
   # install gremlin-server
   - sh -c ./build/gremlin-server/install.sh
+  # install dependencies
+  - npm install
 
 before_script:
   - npm run build
