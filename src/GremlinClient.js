@@ -73,17 +73,18 @@ class GremlinClient extends EventEmitter {
    * @param {MessageEvent} event
    */
   handleProtocolMessage(message) {
-    const rawMessage = JSON.parse(message.data || message); // Node.js || Browser API
+    const { data } = message;
+    const buffer = new Buffer(data, 'binary');
+    const rawMessage = JSON.parse(buffer.toString('utf-8'));
     const {
       requestId,
       status: {
         code: statusCode,
-        message:  statusMessage
+        message: statusMessage
       }
     } = rawMessage;
 
     const { messageStream } = this.commands[requestId];
-
 
     switch (statusCode) {
       case 200: // SUCCESS
@@ -189,8 +190,18 @@ class GremlinClient extends EventEmitter {
   };
 
   sendMessage(message) {
-    const serializedMessage = JSON.stringify(message);
-    this.connection.sendMessage(serializedMessage);
+    const serializedMessage = this.options.accept + JSON.stringify(message);
+
+    // Let's start packing the message into binary
+    // mimeLength(1) + mimeType Length + serializedMessage Length
+    let binaryMessage = new Uint8Array(1 + serializedMessage.length);
+    binaryMessage[0] = this.options.accept.length;
+
+    for (let i = 0; i < serializedMessage.length; i++) {
+      binaryMessage[i + 1] = serializedMessage.charCodeAt(i);
+    }
+
+    this.connection.sendMessage(binaryMessage);
   };
 
   /**
