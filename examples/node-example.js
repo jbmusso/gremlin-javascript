@@ -1,4 +1,4 @@
-var gremlin = require('../');
+var gremlin = require('../src');
 
 var client = gremlin.createClient();
 

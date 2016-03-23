@@ -260,13 +260,13 @@ This section assumes that loaded the default TinkerPop graph with `scripts: [scr
 To run the command line example:
 ```
 cd examples
-node node-example
+../node_modules/.bin/babel-node node-example
 ```
 
 To run the browser example:
 ```
 cd examples
-node server
+../node_modules/.bin/babel-node server
 ```
 then open [http://localhost:3000/examples/gremlin.html](http://localhost:3000/examples/gremlin.html) for a demonstration on how a list of 6 vertices is being populated as the vertices are being streamed down from Gremlin Server.
 
