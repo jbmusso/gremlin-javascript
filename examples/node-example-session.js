@@ -3,7 +3,7 @@ var gremlin = require('../src');
 var client = gremlin.createClient(8182, 'localhost', { session: true });
 
 
-var script = 'g.V()[1..2]';
+var script = 'g.V().range(1, 2)';
 
 var s = client.stream(script);
 
