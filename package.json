@@ -10,6 +10,8 @@
     "build:watch": "npm run build -- --watch",
     "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
     "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "examples:browser": "babel-node examples/server",
+    "examples:node": "babel-node examples/node-example",
     "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
     "test:node:watch": "npm run test:node -- --watch"
   },
