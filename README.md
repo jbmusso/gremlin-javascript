@@ -255,20 +255,28 @@ Please see [/docs/UsingNashorn.md](Using Nashorn).
 
 ## Running the Examples
 
-This section assumes that loaded the default TinkerPop graph with `scripts: [scripts/generate-classic.groovy]` in your `gremlin-server.yaml` config file.
+Start your own Gremlin Server with the default TinkerPop graph loaded by using `scripts: [scripts/generate-classic.groovy]` in your `gremlin-server.yaml` config file.
+
+### Node.js
 
 To run the command line example:
-```
-cd examples
-node node-example
+```shell
+npm run examples:node
 ```
 
-To run the browser example:
+### Browser
+
+Build library:
+```shell
+npm run build:umd
 ```
-cd examples
-node server
+
+Start the example server (listens on port 3000):
 ```
-then open [http://localhost:3000/examples/gremlin.html](http://localhost:3000/examples/gremlin.html) for a demonstration on how a list of 6 vertices is being populated as the vertices are being streamed down from Gremlin Server.
+npm run examples:browser
+```
+
+Open [http://localhost:3000/examples/gremlin.html](http://localhost:3000/examples/gremlin.html) for an example on how a list of six vertices is being populated as the vertices are being streamed down from Gremlin Server.
 
 ## To do list
 

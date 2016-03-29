@@ -1,9 +1,9 @@
-var gremlin = require('../');
+var gremlin = require('../src');
 
 var client = gremlin.createClient();
 
 
-var script = 'g.V()[1..2]';
+var script = 'g.V().range(1, 2)';
 
 // Callback style
 client.execute(script, function(err, res) {
