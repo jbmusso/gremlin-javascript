@@ -9,7 +9,7 @@ export default class WebSocketGremlinConnection extends EventEmitter {
 
     this.open = false;
     this.protocol = tls ? 'wss' : 'ws';
-    this.ws = new WebSocket(this.protocol + '://${host}:${port}${path}');
+    this.ws = new WebSocket(this.protocol + `://${host}:${port}${path}`);
 
     this.ws.onopen = () => this.onOpen();
     this.ws.onerror = (err) => this.handleError(err);

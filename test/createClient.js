@@ -73,7 +73,6 @@ describe('.createClient()', function() {
     });
   });
 
-
   describe('WebSocket path', () => {
     it('should support a custom websocket path', () => {
       const client = gremlin.createClient({ path: '/foo/bar' });
