@@ -47,6 +47,14 @@ describe('.createClient()', function() {
     client.options.accept.should.equal('application/xml');
   });
 
+  it('should allow setting the `tls` option', function() {
+    var client = gremlin.createClient(8183, 'localhost', { tls: true });
+
+    client.port.should.equal(8183);
+    client.host.should.equal('localhost');
+    client.options.tls.should.equal(true);
+  });
+
   it('should override a set `processor` option on a per request basis', function(done) {
     var client = gremlin.createClient({ op: 'foo' });
 
@@ -64,6 +72,7 @@ describe('.createClient()', function() {
       done();
     });
   });
+
 
   describe('WebSocket path', () => {
     it('should support a custom websocket path', () => {
