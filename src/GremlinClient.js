@@ -27,6 +27,7 @@ class GremlinClient extends EventEmitter {
       op: 'eval',
       processor: '',
       accept: 'application/json',
+      tls: false,
       executeHandler,
       ...options,
       path: path.length && !path.startsWith('/') ? `/${path}` : path
@@ -46,12 +47,13 @@ class GremlinClient extends EventEmitter {
     this.connection = this.createConnection({
       port,
       host,
-      path: this.options.path
+      path: this.options.path,
+      tls: this.options.tls
     });
   }
 
-  createConnection({ port, host, path }) {
-    const connection = new WebSocketGremlinConnection({ port, host, path });
+  createConnection({ port, host, path, tls }) {
+    const connection = new WebSocketGremlinConnection({ port, host, path, tls });
 
     connection.on('open', () => this.onConnectionOpen());
     connection.on('error', (error) => this.handleError(error));

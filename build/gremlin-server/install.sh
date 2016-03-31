@@ -10,6 +10,7 @@ unzip $HOME/apache-gremlin-server-$GREMLINSERVER_VERSION-incubating-bin.zip -d $
 
 # get gremlin-server configuration files
 cp ./build/gremlin-server/gremlin-server-js.yaml $HOME/apache-gremlin-server-$GREMLINSERVER_VERSION-incubating/conf/
+cp ./build/gremlin-server/gremlin-server-js-ssl.yaml $HOME/apache-gremlin-server-$GREMLINSERVER_VERSION-incubating/conf/
 
 # get neo4j dependencies
 # bin/gremlin-server.sh -i org.apache.tinkerpop neo4j-gremlin $GREMLINSERVER_VERSION-incubating
@@ -17,5 +18,6 @@ cp ./build/gremlin-server/gremlin-server-js.yaml $HOME/apache-gremlin-server-$GR
 # Start gremlin-server in the background and wait for it to be available
 cd $HOME/apache-gremlin-server-$GREMLINSERVER_VERSION-incubating
 bin/gremlin-server.sh conf/gremlin-server-js.yaml > /dev/null 2>&1 &
+bin/gremlin-server.sh conf/gremlin-server-js-ssl.yaml > /dev/null 2>&1 &
 cd $TRAVIS_BUILD_DIR
 sleep 30

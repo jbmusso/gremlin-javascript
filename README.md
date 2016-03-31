@@ -71,6 +71,7 @@ The `options` object currently allows you to set the following options:
 * `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
 * `path`: a custom URL connection path if connecting to a Gremlin server behind a WebSocket proxy
+* `tls`: whether to use a TLS (wss://) connection or insecure connection (ws://) (default: false)
 
 ### Executing Gremlin queries
 
