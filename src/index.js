@@ -1,5 +1,7 @@
-import GremlinClient from './GremlinClient';
+import _ from 'lodash';
 import template from 'gremlin-template-string';
+
+import GremlinClient from './GremlinClient';
 
 
 export function createClient(port, host, options) {
@@ -16,8 +18,15 @@ export function createClient(port, host, options) {
   return new GremlinClient(port, host, options);
 };
 
-export const makeTemplateTag = (client) => (...gremlinChunks) => {
-  const query = template(...gremlinChunks);
+
+/**
+ * Given a query object, returns a Promise of executing that query with a
+ * given client.
+ * @param  {GremlinClient} client Gremlin client to execute queries with
+ * @param  {Object} query  A query Object { gremlin: String, bindings: Object }
+ * @return {Promise} Promise of execution of the query
+ */
+const makePromise = (client, query) => {
   const promise = new Promise((resolve, reject) =>
     client.execute(query, (err, results) =>
       err ? reject(err) : resolve(results)
@@ -29,7 +38,25 @@ export const makeTemplateTag = (client) => (...gremlinChunks) => {
   return promise;
 }
 
+export const makeTemplateTag = (client) =>
+  (...gremlinChunks) => makePromise(client, template(...gremlinChunks));
+
+/**
+ * Given a map of functions returning query objects, returns a map
+ * of function promising execution of these queries with the given Gremlin
+ * client.
+ *
+ * @param  {GremlinClient} client Gremlin client to execute queries with
+ * @param  {Object<String, Function<Object>>} functions
+ * @return {Object<String, Function<Promise<Results>>>}
+ */
+export const bindForClient = (client, functions) => _(functions)
+  .mapValues((fn) => (...args) => makePromise(client, fn(...args)))
+  .value();
+
+
 export default {
   createClient,
-  makeTemplateTag
+  makeTemplateTag,
+  bindForClient
 }
