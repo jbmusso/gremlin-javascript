@@ -1,3 +1,10 @@
+## 2.3.0
+- Add support for graph aliases
+- Add `bindForClient()` utility function
+- Improvement: handle incoming messages as binary (@PommeVerte)
+- Add Travis CI (@PommeVerte)
+- Fix examples (@guyellis)
+
 ## 2.2.0
 - Add `path` option for setting custom URL connection path
 - Fix: delete pending commands for all received messages except Code 206
