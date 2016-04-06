@@ -47,6 +47,14 @@ describe('.createClient()', function() {
     client.options.accept.should.equal('application/xml');
   });
 
+  it('should support aliases', function () {
+    const client = gremlin.createClient({ aliases: {
+      h: 'g'
+    }});
+
+    client.options.aliases.should.eql({ h: 'g' });
+  });
+
   it('should override a set `processor` option on a per request basis', function(done) {
     var client = gremlin.createClient({ op: 'foo' });
 

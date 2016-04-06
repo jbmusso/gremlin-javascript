@@ -166,9 +166,9 @@ class GremlinClient extends EventEmitter {
    */
   buildMessage(rawScript, rawBindings = {}, baseMessage = {}) {
     let { gremlin, bindings } = Utils.buildQueryFromSignature(rawScript, rawBindings);
-    const { processor, op, accept, language } = this.options;
+    const { processor, op, accept, language, aliases } = this.options;
 
-    const baseArgs = { gremlin, bindings, accept, language };
+    const baseArgs = { gremlin, bindings, accept, language, aliases };
     const args = _.defaults(baseMessage.args || {}, baseArgs);
 
     const message = {
