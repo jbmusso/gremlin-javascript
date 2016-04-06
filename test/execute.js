@@ -108,5 +108,17 @@ describe('.execute()', function() {
       result.length.should.equal(0);
       done();
     });
-  })
+  });
+
+  it('should execute query against an aliased graph', (done) => {
+    const client = gremlin.createClient({ aliases: { h: 'g' }});
+
+    client.execute('h.V()', (err, results) => {
+      (err === null).should.be.true;
+      results.length.should.equal(6);
+
+      done();
+    });
+
+  });
 });
