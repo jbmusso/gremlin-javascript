@@ -249,6 +249,28 @@ client.stream('g.v(vid)', { vid: 1 }, { args: { language: 'nashorn' }})
   .pipe(/* ... */);
 ```
 
+### Gremlin.bindForClient()
+
+Given a map of functions returning query `Object`s (`{ gremlin, bindings }`), returns a map of function promising execution of these queries with the given Gremlin client.
+
+This function is especially useful when used with [gremlin-loader](https://github.com/jbmusso/gremlin-loader), a Webpack loader which imports functions from `.groovy` files as `Object<String, Functions>` where each functions returns query `Object`s that need to be executed with a client.
+
+```javascript
+import { bindForClient, createClient } from 'gremlin';
+
+// A function returning a Gremlin query object { gremlin, bindings }
+const getByName = (name) => ({
+  gremlin: 'g.V().has("name", name)',
+  bindings: { name }
+});
+
+const client = createClient();
+const queries = bindForClient(client, { getByName });
+
+// Then, within an async function:
+const users = await queries.getByName('Alice');
+```
+
 ### Using Gremlin-JavaScript syntax with Nashorn
 
 Please see [/docs/UsingNashorn.md](Using Nashorn).
