@@ -1,3 +1,6 @@
+## 2.3.1
+- Fix a missing feature from previous release
+
 ## 2.3.0
 - Add support for graph aliases
 - Add `bindForClient()` utility function
