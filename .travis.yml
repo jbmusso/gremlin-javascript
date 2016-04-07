@@ -18,9 +18,9 @@ install:
   - npm install
 
 before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sleep 3
   - npm run build
 
-script: npm run test:node
-
-after_script:
-  - npm run coverage:travis
+script: npm run test:node && npm run test:browser:coverage
