@@ -190,7 +190,8 @@ class GremlinClient extends EventEmitter {
   };
 
   sendMessage(message) {
-    const serializedMessage = this.options.accept + JSON.stringify(message);
+    let serializedMessage = this.options.accept + JSON.stringify(message);
+    serializedMessage = unescape(encodeURIComponent(serializedMessage));
 
     // Let's start packing the message into binary
     // mimeLength(1) + mimeType Length + serializedMessage Length
