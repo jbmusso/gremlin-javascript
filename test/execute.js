@@ -119,6 +119,15 @@ describe('.execute()', function() {
 
       done();
     });
+  });
 
+  it('should serialize payloads with utf-8 special characters', (done) => {
+    const client = gremlin.createClient();
+
+    client.execute(`g.V().has('name', 'é')`, (err, results) => {
+      (err === null).should.be.true;
+      results.length.should.equal(0);
+      done()
+    });
   });
 });
