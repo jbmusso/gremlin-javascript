@@ -1,3 +1,6 @@
+## 2.3.2
+- Fix an issue with payloads containing utf8 special characters (@PommeVerte)
+
 ## 2.3.1
 - Fix a missing feature from previous release
 
