@@ -14,6 +14,10 @@ import * as Utils from './utils';
 import Rx from 'rx';
 
 
+const hasCode = (filterCode) => ({ status: { code } }) => code === filterCode;
+
+const isErrorMessage = ({ status: { code }}) => [200, 204, 206].indexOf(code) === -1;
+
 class GremlinClient extends EventEmitter {
   constructor(port = 8182, host = 'localhost', options = {}) {
     super();
@@ -316,13 +320,11 @@ class GremlinClient extends EventEmitter {
       .filter(({ requestId }) => requestId === command.message.requestId);
 
     const successMessage$ = commandMessages$
-      .filter(({ status: { code } }) => code === 200);
-
+      .filter(hasCode(200))
     const continuationMessages$ = commandMessages$
-      .filter(({ status: { code } }) => code === 206);
-
+      .filter(hasCode(206))
     const noContentMessage$ = commandMessages$
-      .filter(({ status: { code }}) => code === 204)
+      .filter(hasCode(204))
       // Rewrite these in order to ensure the callback is always fired with an
       // Empty Array rather than a null value.
       // Mutating is perfectly fine here.
@@ -336,10 +338,10 @@ class GremlinClient extends EventEmitter {
     );
 
     const errorMessages$ = commandMessages$
-      .filter(({ status: { code }}) => [200, 204, 206].indexOf(code) === -1)
-      .flatMap(({ status: { code, message } }) => {
-        return Rx.Observable.throw(new Error(message + ' (Error '+ code +')'))
-      });
+      .filter(isErrorMessage)
+      .flatMap(({ status: { code, message } }) =>
+        Rx.Observable.throw(new Error(message + ' (Error '+ code +')'))
+      );
 
     const results$ = Rx.Observable.merge(
         successMessage$,
