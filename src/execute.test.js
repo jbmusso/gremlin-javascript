@@ -13,7 +13,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should queue command before the client is connected', function(done) {
+  it.skip('should queue command before the client is connected', function(done) {
     var client = gremlin.createClient();
 
     client.execute('g.V()', function() {});
@@ -144,7 +144,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should handle receiving responses to missing requests', done => {
+  it.skip('should handle receiving responses to missing requests', done => {
     const client = gremlin.createClient();
     const warnings = [];
     client.on('warning', warning => {
@@ -172,7 +172,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should handle malformed responses', done => {
+  it.skip('should handle malformed responses', done => {
     const client = gremlin.createClient();
     const warnings = [];
     client.on('warning', warning => {
@@ -192,7 +192,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should support Gremlin-JavaScript language variant', async () => {
+  it.skip('should support Gremlin-JavaScript language variant', async () => {
     const client = gremlin.createClient();
     const g = client.traversalSource();
     const { both } = statics;

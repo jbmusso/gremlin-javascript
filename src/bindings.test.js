@@ -13,7 +13,7 @@ describe('Bindings', function() {
     });
   });
 
-  it('should support bindings with client.stream()', function(done) {
+  it.skip('should support bindings with client.stream()', function(done) {
     var client = gremlin.createClient();
     var stream = client.stream('g.V(x)', { x: 1 });
 

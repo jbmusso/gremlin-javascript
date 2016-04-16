@@ -1,10 +1,8 @@
 require('chai').should();
 import gremlin from './';
 
-describe('.stream()', function() {
-  it('should emit `data` events with a chunk of results and the raw response', function(
-    done,
-  ) {
+describe.skip('.stream()', function() {
+  it('should emit `data` events with a chunk of results and the raw response', function(done) {
     var client = gremlin.createClient();
     var s = client.stream('g.V()');
 

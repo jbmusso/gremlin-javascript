@@ -13,6 +13,7 @@
     "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "examples:browser": "babel-node examples/server",
     "examples:node": "babel-node examples/node-example",
+    "examples:rxjs": "babel-node examples/rxjs",
     "precommit": "lint-staged",
     "prettify": "prettier --single-quote --trailing-comma all --write \"src/**/*.js\"",
     "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 mocha $(find src -path '*test.js') --compilers js:babel-register --recursive --reporter spec",
@@ -47,6 +48,7 @@
     "lodash": "^3.10.1",
     "node-uuid": "^1.4.3",
     "readable-stream": "^2.0.2",
+    "rx": "^4.1.0",
     "ws": "^2.3.1",
     "zer": "^0.1.0"
   },

@@ -9,8 +9,10 @@ import { gremlin, renderChain } from 'zer';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
-import executeHandler from './executeHandler';
 import * as Utils from './utils';
+
+import Rx from 'rx';
+
 
 class GremlinClient extends EventEmitter {
   constructor(port = 8182, host = 'localhost', options = {}) {
@@ -29,7 +31,6 @@ class GremlinClient extends EventEmitter {
       op: 'eval',
       processor: '',
       accept: 'application/json',
-      executeHandler,
       ssl: false,
       rejectUnauthorized: true,
       ...options,
@@ -49,30 +50,61 @@ class GremlinClient extends EventEmitter {
 
     const { ssl, rejectUnauthorized } = this.options;
 
-    this.connection = this.createConnection({
+    const connection = this.createConnection({
       port,
       host,
       path: this.options.path,
       ssl,
       rejectUnauthorized,
     });
+
+    this.commands$ = new Rx.Subject();
+    this.commands$.subscribe((command) => {
+      const { message: { requestId } } = command;
+      this.commands[requestId] = command
+    });
+
+    this.registerConnection(connection);
   }
 
   createConnection({ port, host, path, ssl, rejectUnauthorized }) {
-    const connection = new WebSocketGremlinConnection({
-      port,
-      host,
-      path,
-      ssl,
-      rejectUnauthorized,
-    });
+    return new WebSocketGremlinConnection({ port, host, path, ssl, rejectUnauthorized });
+  }
 
-    connection.on('open', () => this.onConnectionOpen());
-    connection.on('error', error => this.handleError(error));
-    connection.on('message', message => this.handleProtocolMessage(message));
-    connection.on('close', event => this.handleDisconnection(event));
+  registerConnection(connection) {
+    this.connection = connection;
 
-    return connection;
+    const open$ = Rx.Observable.fromEvent(connection, 'open');
+    const error$ = Rx.Observable.fromEvent(connection, 'error');
+    const incomingMessages$ = Rx.Observable.fromEvent(connection, 'message')
+      .map(({ data }) => {
+        const buffer = new Buffer(data, 'binary');
+        const rawMessage = JSON.parse(buffer.toString('utf-8'));
+
+        return rawMessage;
+      });
+    const close$ = Rx.Observable.fromEvent(connection, 'close');
+
+    const canSend$ = Rx.Observable.merge(
+      open$.map(true),
+      error$.map(false),
+      close$.map(false)
+    )
+
+    open$.subscribe((connection) => this.onConnectionOpen());
+    error$.subscribe((error) => this.handleError(error));
+
+
+    this.incomingMessages$ = incomingMessages$;
+
+    close$.subscribe((event) => this.handleDisconnection(event));
+
+    const outgoingMessages$ = this.commands$
+      .map(({ message }) => message)
+      .pausableBuffered(canSend$);
+
+    outgoingMessages$
+      .subscribe((message) => this.sendMessage(message));
   }
 
   closeConnection() {
@@ -92,70 +124,13 @@ class GremlinClient extends EventEmitter {
   }
 
   /**
-   * Process all incoming raw message events sent by Gremlin Server, and dispatch
-   * to the appropriate command.
-   *
-   * @param {MessageEvent} event
-   */
-  handleProtocolMessage(message) {
-    let rawMessage, requestId, statusCode, statusMessage;
-    try {
-      const { data } = message;
-      const buffer = new Buffer(data, 'binary');
-      rawMessage = JSON.parse(buffer.toString('utf-8'));
-      requestId = rawMessage.requestId;
-      statusCode = rawMessage.status.code;
-      statusMessage = rawMessage.status.message;
-    } catch (e) {
-      this.warn('MalformedResponse', 'Received malformed response message');
-      return;
-    }
-
-    // If we didn't find a stream for this response, emit a warning on the
-    // client
-    if (!this.commands[requestId]) {
-      this.warn(
-        'OrphanedResponse',
-        `Received response for missing or closed request: ${requestId}`,
-      );
-      return;
-    }
-
-    const { messageStream = null } = this.commands[requestId];
-
-    switch (statusCode) {
-      case 200: // SUCCESS
-        delete this.commands[requestId]; // TODO: optimize performance
-        messageStream.push(rawMessage);
-        messageStream.push(null);
-        break;
-      case 204: // NO_CONTENT
-        delete this.commands[requestId];
-        messageStream.push(null);
-        break;
-      case 206: // PARTIAL_CONTENT
-        messageStream.push(rawMessage);
-        break;
-      default:
-        delete this.commands[requestId];
-        messageStream.emit(
-          'error',
-          new Error(statusMessage + ' (Error ' + statusCode + ')'),
-        );
-        break;
-    }
-  }
-
-  /**
    * Handle the WebSocket onOpen event, flag the client as connected and
    * process command queue.
    */
   onConnectionOpen() {
     this.connected = true;
     this.emit('connect');
-
-    this.executeQueue();
-  }
+  };
 
   /**
    * @param {CloseEvent} event
@@ -165,17 +140,6 @@ class GremlinClient extends EventEmitter {
       message: 'WebSocket closed',
       details: event,
     });
-  }
-
-  /**
-   * Process the current command queue, sending commands to Gremlin Server
-   * (First In, First Out).
-   */
-  executeQueue() {
-    while (this.queue.length > 0) {
-      let { message } = this.queue.shift();
-      this.sendMessage(message);
-    }
   }
 
   /**
@@ -271,14 +235,13 @@ class GremlinClient extends EventEmitter {
       message = {};
     }
 
-    const messageStream = this.messageStream(script, bindings, message);
-
-    // TO CHECK: errors handling could be improved
-    // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
-    // for an example using domains
-    const { executeHandler } = this.options;
-
-    executeHandler(messageStream, callback);
+    this.observable(script, bindings, message)
+      .flatMap(({ result: { data }}) => data)
+      .toArray()
+      .subscribe(
+        (results) => callback(null, results),
+        (err) => callback(err)
+      )
   }
 
   /**
@@ -337,66 +300,56 @@ class GremlinClient extends EventEmitter {
       messageStream: stream,
     };
 
-    this.sendCommand(command); //todo improve for streams
+    this.commands$.onNext(command);
 
     return stream;
   }
 
-  /**
-   * Send a command to Gremlin Server, or add it to queue if the connection
-   * is not established.
-   *
-   * @param {Object} command
-   */
-  sendCommand(command) {
-    const { message, message: { requestId } } = command;
-
-    this.commands[requestId] = command;
-
-    if (this.connected) {
-      this.sendMessage(message);
-    } else {
-      this.queue.push(command);
+  observable(script, bindings, rawMessage) {
+    const command = {
+      message: this.buildMessage(script, bindings, rawMessage),
     }
-  }
 
-  traversalSource() {
-    const { g } = gremlin;
+    this.commands$.onNext(command);
 
-    let chain = g;
+    const commandMessages$ = this.incomingMessages$
+      .filter(({ requestId }) => requestId === command.message.requestId);
 
-    const awaitable = new Proxy(g, {
-      get: (traversal, name, receiver) => {
-        if (name === 'toPromise') {
-          return () =>
-            new Promise((resolve, reject) => {
-              const { query, params } = renderChain(chain);
-              this.execute(query, params, (err, result) => {
-                if (err) {
-                  return reject(err);
-                }
-                resolve(result);
-              });
-            });
-        }
+    const successMessage$ = commandMessages$
+      .filter(({ status: { code } }) => code === 200);
 
-        chain = chain[name];
+    const continuationMessages$ = commandMessages$
+      .filter(({ status: { code } }) => code === 206);
 
-        return new Proxy(traversal, {
-          get(target2, name2, receiver2) {
-            target2 = target2[name];
-            return awaitable;
-          },
-        })[name];
-      },
-      apply(traversal, thisArg, args) {
-        Reflect.apply(chain, null, args);
+    const noContentMessage$ = commandMessages$
+      .filter(({ status: { code }}) => code === 204)
+      // Rewrite these in order to ensure the callback is always fired with an
+      // Empty Array rather than a null value.
+      // Mutating is perfectly fine here.
+      .map((message) => {
+        message.result.data = []
+        return message;
+      });
 
-        return awaitable;
-      },
-    });
+    const terminationMessages$ = Rx.Observable.merge(
+      successMessage$, noContentMessage$
+    );
 
-    return awaitable;
+    const errorMessages$ = commandMessages$
+      .filter(({ status: { code }}) => [200, 204, 206].indexOf(code) === -1)
+      .flatMap(({ status: { code, message } }) => {
+        return Rx.Observable.throw(new Error(message + ' (Error '+ code +')'))
+      });
+
+    const results$ = Rx.Observable.merge(
+        successMessage$,
+        continuationMessages$,
+        noContentMessage$,
+        errorMessages$
+      )
+      .takeUntil(terminationMessages$);
+
+    return results$;
   }
 }
 
