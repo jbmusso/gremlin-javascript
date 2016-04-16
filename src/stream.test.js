@@ -18,7 +18,7 @@ describe.skip('.stream()', function() {
     });
   });
 
-  it('should handle bound parameters', function(done) {
+  it.skip('should handle bound parameters', function(done) {
     var client = gremlin.createClient();
     var s = client.stream('g.V(x)', { x: 1 });
 
@@ -31,7 +31,7 @@ describe.skip('.stream()', function() {
     });
   });
 
-  it('should handle optional args', function(done) {
+  it.skip('should handle optional args', function(done) {
     var client = gremlin.createClient();
     var s = client.stream('g.V(1)', null, {
       args: { language: 'gremlin-groovy' },
@@ -63,7 +63,7 @@ describe.skip('.stream()', function() {
     });
   });
 
-  it('should handle errors', function(done) {
+  it.skip('should handle errors', function(done) {
     var client = gremlin.createClient();
     // pass a buggy script (missing parenthese)
     var script = 'g.V(';
