@@ -43,9 +43,13 @@ class GremlinClient extends EventEmitter {
 
     this.commands = {};
 
+    this.initializeConnection();
+  }
+
+  initializeConnection(){
     this.connection = this.createConnection({
-      port,
-      host,
+      port: this.port,
+      host: this.host,
       path: this.options.path
     });
   }
@@ -121,10 +125,13 @@ class GremlinClient extends EventEmitter {
    * @param {CloseEvent} event
    */
   handleDisconnection(event) {
+    /*
     this.cancelPendingCommands({
       message: 'WebSocket closed',
       details: event
-    });
+    });*/
+    this.connection = null;
+    this.initializeConnection();
   };
 
   /**
