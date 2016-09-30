@@ -38,7 +38,7 @@
     "lodash": "^3.10.1",
     "node-uuid": "^1.4.3",
     "readable-stream": "^2.0.2",
-    "ws": "^0.8.0"
+    "ws": "^1.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.4.5",
