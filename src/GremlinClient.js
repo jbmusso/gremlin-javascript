@@ -66,8 +66,11 @@ class GremlinClient extends EventEmitter {
     this.emit('error', err);
   }
 
-  warn(message) {
-    this.emit('warning', message);
+  warn(code, message) {
+    this.emit('warning', {
+      code,
+      message
+    });
   }
 
   /**
@@ -77,21 +80,23 @@ class GremlinClient extends EventEmitter {
    * @param {MessageEvent} event
    */
   handleProtocolMessage(message) {
-    const { data } = message;
-    const buffer = new Buffer(data, 'binary');
-    const rawMessage = JSON.parse(buffer.toString('utf-8'));
-    const {
-      requestId,
-      status: {
-        code: statusCode,
-        message: statusMessage
-      }
-    } = rawMessage;
+    let rawMessage, requestId, statusCode, statusMessage;
+    try {
+      const { data } = message;
+      const buffer = new Buffer(data, 'binary');
+      rawMessage = JSON.parse(buffer.toString('utf-8'));
+      requestId = rawMessage.requestId;
+      statusCode = rawMessage.status.code;
+      statusMessage = rawMessage.status.message;
+    } catch (e) {
+      this.warn('MalformedResponse', 'Received malformed response message');
+      return;
+    }
 
     // If we didn't find a stream for this response, emit a warning on the
     // client
     if (!this.commands[requestId]) {
-      this.warn(`Received response for missing or closed request: ${message}`);
+      this.warn('OrphanedResponse', `Received response for missing or closed request: ${requestId}`);
       return;
     }
 
