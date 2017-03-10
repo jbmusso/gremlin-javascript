@@ -130,4 +130,31 @@ describe('.execute()', function() {
       done()
     });
   });
+
+  it('should handle receiving responses to missing requests', (done) => {
+    const client = gremlin.createClient();
+    let warningCount = 0;
+    client.on('warning', () => {
+      warningCount++;
+    });
+
+    const message = {
+      requestId: 'nonexistant',
+      status: {
+        code: 200,
+        message: 'data'
+      }
+    };
+
+    warningCount.should.equal(0);
+    client.handleProtocolMessage({
+      data: new Buffer(JSON.stringify(message), 'utf8')
+    });
+
+    // Have to cycle so that the event emitter can fire
+    setTimeout(() => {
+      warningCount.should.equal(1);
+      done();
+    });
+  });
 });

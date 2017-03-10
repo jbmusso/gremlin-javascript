@@ -66,6 +66,10 @@ class GremlinClient extends EventEmitter {
     this.emit('error', err);
   }
 
+  warn(message) {
+    this.emit('warning', message);
+  }
+
   /**
    * Process all incoming raw message events sent by Gremlin Server, and dispatch
    * to the appropriate command.
@@ -84,7 +88,14 @@ class GremlinClient extends EventEmitter {
       }
     } = rawMessage;
 
-    const { messageStream } = this.commands[requestId];
+    // If we didn't find a stream for this response, emit a warning on the
+    // client
+    if (!this.commands[requestId]) {
+      this.warn(`Received response for missing or closed request: ${message}`);
+      return;
+    }
+
+    const { messageStream = null } = this.commands[requestId];
 
     switch (statusCode) {
       case 200: // SUCCESS
@@ -220,8 +231,8 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    * @param {Function} callback
    */
-  execute(script, bindings = {}, message = {}, ...args) {
-    let callback = args[args.length - 1];
+  execute(script, bindings = {}, message = {}) {
+    let callback = arguments[arguments.length - 1];
 
     if (typeof message === 'function') {
       callback = message;
