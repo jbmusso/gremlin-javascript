@@ -61,6 +61,10 @@ class GremlinClient extends EventEmitter {
     return connection;
   }
 
+  closeConnection() {
+    this.connection.close();
+  }
+
   handleError(err) {
     this.connected = false;
     this.emit('error', err);
