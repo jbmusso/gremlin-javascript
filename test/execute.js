@@ -130,4 +130,52 @@ describe('.execute()', function() {
       done()
     });
   });
+
+  it('should handle receiving responses to missing requests', (done) => {
+    const client = gremlin.createClient();
+    const warnings = [];
+    client.on('warning', warning => {
+      warnings.push(warning);
+    });
+
+    const message = {
+      requestId: 'nonexistant',
+      status: {
+        code: 200,
+        message: 'data'
+      }
+    };
+
+    warnings.length.should.equal(0);
+    client.handleProtocolMessage({
+      data: new Buffer(JSON.stringify(message), 'utf8')
+    });
+
+    // Have to cycle so that the event emitter can fire
+    setTimeout(() => {
+      warnings.length.should.equal(1);
+      warnings[0].code.should.equal('OrphanedResponse');
+      done();
+    });
+  });
+
+  it('should handle malformed responses', (done) => {
+    const client = gremlin.createClient();
+    const warnings = [];
+    client.on('warning', warning => {
+      warnings.push(warning);
+    });
+
+    warnings.length.should.equal(0);
+    client.handleProtocolMessage({
+      data: new Buffer('badmessage', 'utf8')
+    });
+
+    // Have to cycle do that the event emitter can fire
+    setTimeout(() => {
+      warnings.length.should.equal(1);
+      warnings[0].code.should.equal('MalformedResponse');
+      done();
+    });
+  });
 });
