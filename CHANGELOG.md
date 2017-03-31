@@ -1,3 +1,7 @@
+## 2.3.3
+- Update `ws` to `v1.1.1`, fix issue when sending many queries. See #60 #74 (@princjef)
+- Fix issues when receiving orphaned responses. See #73 (@princjef)
+
 ## 2.3.2
 - Fix an issue with payloads containing utf8 special characters (@PommeVerte)
 
