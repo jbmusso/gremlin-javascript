@@ -19,7 +19,9 @@ class GremlinClient extends EventEmitter {
     this.port = port;
     this.host = host;
 
-    const { path = '' } = options;
+    // Breaking change in v3.2.2, connect to /gremlin rather than /
+    // See: https://groups.google.com/d/topic/gremlin-users/x4hiHsmTsHM/discussion
+    const { path = '/gremlin' } = options;
 
     this.options = {
       language: 'gremlin-groovy',
