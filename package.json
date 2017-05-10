@@ -1,45 +1,66 @@
 {
-  "name": "gremlin",
-  "version": "2.3.2",
-  "description": "JavaScript client for TinkerPop3 Gremlin Server",
-  "main": "lib/index.js",
-  "scripts": {
-    "build": "babel ./src -d lib",
-    "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
-    "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
-    "build:watch": "npm run build -- --watch",
-    "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
-    "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
-    "examples:browser": "babel-node examples/server",
-    "examples:node": "babel-node examples/node-example",
-    "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
-    "test:node:watch": "npm run test:node -- --watch"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jbmusso/gremlin-javascript"
-  },
-  "keywords": [
-    "tinkerpop",
-    "gremlin",
-    "graphdb",
-    "graph",
-    "database"
+  "_args": [
+    [
+      {
+        "raw": "gremlin",
+        "scope": null,
+        "escapedName": "gremlin",
+        "name": "gremlin",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "C:\\Buffer\\NodeJsScripts"
+    ]
   ],
-  "author": "Jean-Baptiste Musso <jbmusso+github@gmail.com>",
-  "license": "MIT",
+  "_from": "gremlin@latest",
+  "_id": "gremlin@2.3.2",
+  "_inCache": true,
+  "_location": "/gremlin",
+  "_nodeVersion": "5.9.0",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/gremlin-2.3.2.tgz_1460582899349_0.214198061497882"
+  },
+  "_npmUser": {
+    "name": "jbmusso",
+    "email": "jbmusso@gmail.com"
+  },
+  "_npmVersion": "3.7.3",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "gremlin",
+    "scope": null,
+    "escapedName": "gremlin",
+    "name": "gremlin",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/gremlin/-/gremlin-2.3.2.tgz",
+  "_shasum": "e0fcade25e38d75cdc671e12bf79769ea95c9204",
+  "_shrinkwrap": null,
+  "_spec": "gremlin",
+  "_where": "C:\\Buffer\\NodeJsScripts",
+  "author": {
+    "name": "Jean-Baptiste Musso",
+    "email": "jbmusso+github@gmail.com"
+  },
   "bugs": {
     "url": "https://github.com/jbmusso/gremlin-javascript/issues"
   },
-  "homepage": "https://github.com/jbmusso/gremlin-javascript",
   "dependencies": {
     "gremlin-template-string": "^2.0.0",
     "highland": "^2.5.1",
     "lodash": "^3.10.1",
     "node-uuid": "^1.4.3",
     "readable-stream": "^2.0.2",
-    "ws": "^1.1.1"
+    "ws": "^0.8.0"
   },
+  "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "devDependencies": {
     "babel-cli": "^6.4.5",
     "babel-core": "^6.4.0",
@@ -75,5 +96,47 @@
     "vinyl-source-stream": "^1.0.0",
     "webpack": "^1.12.11",
     "yargs": "^1.3.1"
-  }
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "e0fcade25e38d75cdc671e12bf79769ea95c9204",
+    "tarball": "https://registry.npmjs.org/gremlin/-/gremlin-2.3.2.tgz"
+  },
+  "gitHead": "5cc8c1c7ff83dc81b0abb1b35043531cfaa70bb6",
+  "homepage": "https://github.com/jbmusso/gremlin-javascript",
+  "keywords": [
+    "tinkerpop",
+    "gremlin",
+    "graphdb",
+    "graph",
+    "database"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "maintainers": [
+    {
+      "name": "jbmusso",
+      "email": "jbmusso@gmail.com"
+    }
+  ],
+  "name": "gremlin",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbmusso/gremlin-javascript.git"
+  },
+  "scripts": {
+    "build": "babel ./src -d lib",
+    "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
+    "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
+    "build:watch": "npm run build -- --watch",
+    "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
+    "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "examples:browser": "babel-node examples/server",
+    "examples:node": "babel-node examples/node-example",
+    "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
+    "test:node:watch": "npm run test:node -- --watch"
+  },
+  "version": "2.3.2"
 }
