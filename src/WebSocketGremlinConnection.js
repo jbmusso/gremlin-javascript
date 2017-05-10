@@ -4,12 +4,19 @@ import WebSocket from 'ws';
 
 
 export default class WebSocketGremlinConnection extends EventEmitter {
-  constructor({ port, host, path }) {
+  constructor({ port, host, path, ssl = false }) {
     super();
 
     this.open = false;
 
-    this.ws = new WebSocket(`ws://${host}:${port}${path}`);
+    if (ssl == true)
+    {
+      this.ws = new WebSocket(`wss://${host}:${port}${path}`);
+    }
+    else
+    {
+      this.ws = new WebSocket(`ws://${host}:${port}${path}`);
+    }
 
     this.ws.onopen = () => this.onOpen();
     this.ws.onerror = (err) => this.handleError(err);
