@@ -35,7 +35,7 @@ describe('.execute()', function() {
   it('should handle optional args', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V(1)', null, { args: { language: 'nashorn' }}, function(err, result) {
+    client.execute('g.V(1)', null, { args: { language: 'gremlin-groovy' }}, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
       done();
@@ -45,7 +45,7 @@ describe('.execute()', function() {
   it('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V(x)', { x: 1 }, { args: { language: 'nashorn' }}, function(err, result) {
+    client.execute('g.V(x)', { x: 1 }, { args: { language: 'gremlin-groovy' }}, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
       done();

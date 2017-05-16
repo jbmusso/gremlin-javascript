@@ -4,7 +4,7 @@ import gremlin from '../';
 describe('.stream()', function() {
   it('should emit `data` events with a chunk of results and the raw response', function(done) {
     var client = gremlin.createClient();
-    var s = client.stream(function() { g.V(); });
+    var s = client.stream('g.V()');
 
     var results = [];
 
@@ -33,7 +33,7 @@ describe('.stream()', function() {
 
   it('should handle optional args', function(done) {
     var client = gremlin.createClient();
-    var s = client.stream('g.V(1)', null, { args: { language: 'nashorn' }});
+    var s = client.stream('g.V(1)', null, { args: { language: 'gremlin-groovy' }});
 
     s.on('data', function(result) {
       result.id.should.equal(1);
@@ -44,12 +44,12 @@ describe('.stream()', function() {
     });
   });
 
-  it('should handle bindings and optional args', function(done) {
+  it.skip('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
-    var s = client.stream('g.V(id)', { id : 1 }, { args: { language: 'nashorn' }});
+    var s = client.stream('g.V(xyz)', { xyz : 1 }, { args: { language: 'gremlin-groovy' }});
 
     s.on('data', function(result) {
-      result.id.should.equal(1);
+      result.xyz.should.equal(1);
     });
 
     s.on('end', function() {

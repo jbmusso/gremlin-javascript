@@ -24,6 +24,7 @@ describe('.createClient()', function() {
   });
 
   it('should allow setting the `language` option', function() {
+    // Although 'nashorn' is deprecated, keeping this feature here
     var client = gremlin.createClient({ language: 'nashorn' });
 
     client.port.should.equal(8182);

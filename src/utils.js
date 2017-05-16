@@ -1,19 +1,6 @@
 import _ from 'lodash';
 
 /**
- * Get the inner function body from a function.toString() representation
- *
- * @param {Function}
- * @return {String}
- */
-export function extractFunctionBody(fn) {
-  const body = fn.toString();
-  const trimmedBody = body.substring(body.indexOf('{') + 1, body.lastIndexOf('}'));
-
-  return trimmedBody;
-};
-
-/**
  * Given optional and polymorphic arguments, return an object with a raw
  * 'gremlin' string and optional 'bindings' object.
  * When supplying a query object as first parameter, any bindings supplied
@@ -24,13 +11,6 @@ export function extractFunctionBody(fn) {
  * @return {Object}: { gremlin<String>, bindings<Object> }
  */
 export function buildQueryFromSignature(rawScript = '', rawBindings) {
-  if (typeof rawScript === 'function') {
-    return {
-      gremlin: extractFunctionBody(rawScript),
-      bindings: rawBindings
-    };
-  }
-
   const {
     gremlin = rawScript,
     bindings = rawBindings
