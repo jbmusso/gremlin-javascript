@@ -247,77 +247,21 @@ class GremlinClient extends EventEmitter {
       )
   }
 
-  /**
-   * Execute the script and return a stream of distinct/single results.
-   * This method reemits a distinct data event for each returned result, which
-   * makes the stream behave as if `resultIterationBatchSize` was set to 1.
-   *
-   * If you do not wish this behavior, please use client.messageStream() instead.
-   *
-   * Even though this method uses Highland.js internally, it does not return
-   * a high level Highland readable stream so we do not risk having to deal
-   * with unexpected API breaking changes as Highland.js evolves.
-   *
-   * @return {ReadableStream} A Node.js Stream2
-   */
-  stream(script, bindings, message) {
-    const messageStream = this.messageStream(script, bindings, message);
-    const _ = highland; // override lo-dash locally
-
-    // Create a local highland 'through' pipeline so we don't expose
-    // a Highland stream to the end user, but a standard Node.js Stream2
-    const through = _.pipeline(
-      _.map(({ result: { data } }) => data),
-      _.sequence(),
-    );
-
-    let rawStream = messageStream.pipe(through);
-
-    messageStream.on('error', e => {
-      rawStream.emit('error', new Error(e));
-    });
-
-    return rawStream;
-  }
-
-  /**
-   * Execute the script and return a stream of raw messages returned by Gremlin
-   * Server.
-   * This method does not reemit one distinct data event per result. It directly
-   * emits the raw messages returned by Gremlin Server as they are received.
-   *
-   * Although public, this is a low level method intended to be used for
-   * advanced usages.
-   *
-   * @public
-   * @param {String|Function} script
-   * @param {Object} bindings
-   * @param {Object} message
-   * @return {MessageStream}
-   */
-  messageStream(script, bindings, rawMessage) {
-    let stream = new MessageStream({ objectMode: true });
-
-    const command = {
-      message: this.buildMessage(script, bindings, rawMessage),
-      messageStream: stream,
-    };
-
-    this.commands$.onNext(command);
-
-    return stream;
-  }
-
   observable(script, bindings, rawMessage) {
     const command = {
       message: this.buildMessage(script, bindings, rawMessage),
     }
 
+    // This actually sends the command to Gremlin Server
     this.commands$.onNext(command);
 
+    // Create a new Observable of of incoming messages, but filter only
+    // incoming messages to the command we just send.
     const commandMessages$ = this.incomingMessages$
       .filter(({ requestId }) => requestId === command.message.requestId);
 
+    // Off of these messages, create new Observables for each message code
+    // TODO: this could be a custom operator.
     const successMessage$ = commandMessages$
       .filter(hasCode(200))
     const continuationMessages$ = commandMessages$
@@ -332,6 +276,8 @@ class GremlinClient extends EventEmitter {
         return message;
       });
 
+    // That Observable will ultimately emit a single object which indicates
+    // that we should not expect any other messages;
     const terminationMessages$ = Rx.Observable.merge(
       successMessage$, noContentMessage$
     );
