@@ -59,24 +59,6 @@ describe('.createClient()', function() {
     client.options.aliases.should.eql({ h: 'g' });
   });
 
-  it.skip('should override a set `processor` option on a per request basis', function(done) {
-    var client = gremlin.createClient({ op: 'foo' });
-
-    client.port.should.equal(8182);
-    client.host.should.equal('localhost');
-    client.options.op.should.equal('foo');
-
-    var s = client.stream('g.V(1)', null, { op: 'eval' });
-
-    s.on('data', function(result) {
-      result.should.be.an('object');
-    });
-
-    s.on('end', function() {
-      done();
-    });
-  });
-
   describe('WebSocket path', () => {
     it('should support a custom websocket path', () => {
       const client = gremlin.createClient({ path: '/foo/bar' });

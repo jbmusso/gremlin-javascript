@@ -44,10 +44,8 @@
   "homepage": "https://github.com/jbmusso/gremlin-javascript",
   "dependencies": {
     "gremlin-template-string": "^2.0.0",
-    "highland": "^2.5.1",
     "lodash": "^3.10.1",
     "node-uuid": "^1.4.3",
-    "readable-stream": "^2.0.2",
     "rx": "^4.1.0",
     "ws": "^2.3.1",
     "zer": "^0.1.0"

@@ -13,22 +13,7 @@ describe('Bindings', function() {
     });
   });
 
-  it.skip('should support bindings with client.stream()', function(done) {
-    var client = gremlin.createClient();
-    var stream = client.stream('g.V(x)', { x: 1 });
-
-    stream.on('data', function(result) {
-      result.id.should.equal(1);
-    });
-
-    stream.on('end', function() {
-      done();
-    });
-  });
-
-  it.skip('should give an error with reserved binding name in .exec', function(
-    done,
-  ) {
+  it.skip('should give an error with reserved binding name in .exec', function(done) {
     var client = gremlin.createClient();
 
     // This is supposed to throw a NoSuchElementException in Gremlin Server:

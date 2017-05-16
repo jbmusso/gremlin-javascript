@@ -4,11 +4,9 @@ import { EventEmitter } from 'events';
 
 import uuid from 'node-uuid';
 import _ from 'lodash';
-import highland from 'highland';
 import { gremlin, renderChain } from 'zer';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
-import MessageStream from './MessageStream';
 import * as Utils from './utils';
 
 import Rx from 'rx';
@@ -224,9 +222,6 @@ class GremlinClient extends EventEmitter {
   /**
    * Asynchronously send a script to Gremlin Server for execution and fire
    * the provided callback when all results have been fetched.
-   *
-   * This method internally uses a stream to handle the potential concatenation
-   * of results.
    *
    * Callback signature: (Error, Array<result>)
    *
