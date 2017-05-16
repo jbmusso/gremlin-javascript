@@ -231,8 +231,8 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    * @param {Function} callback
    */
-  execute(script, bindings = {}, message = {}) {
-    let callback = arguments[arguments.length - 1];
+  execute(script, bindings = {}, message = {}, callback) {
+    callback = arguments[arguments.length - 1];
 
     if (typeof message === 'function') {
       callback = message;
