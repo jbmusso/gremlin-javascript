@@ -12,6 +12,7 @@
     "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha",
     "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "examples:browser": "babel-node examples/server",
+    "examples:disconnect": "nodemon --exec babel-node -- examples/server-disconnect.js",
     "examples:node": "babel-node examples/node-example",
     "examples:rxjs": "babel-node examples/rxjs",
     "precommit": "lint-staged",
@@ -51,7 +52,7 @@
     "zer": "^0.1.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.4.5",
+    "babel-cli": "^6.24.1",
     "babel-core": "^6.4.0",
     "babel-loader": "^6.2.1",
     "babel-plugin-transform-async-to-module-method": "^6.5.2",
@@ -83,6 +84,7 @@
     "lint-staged": "^3.6.0",
     "mocha": "^1.21.4",
     "mocha-lcov-reporter": "^1.2.0",
+    "nodemon": "^1.11.0",
     "prettier": "^1.4.2",
     "rimraf": "^2.6.1",
     "serve-static": "^1.5.3",
