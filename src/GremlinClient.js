@@ -247,7 +247,7 @@ class GremlinClient extends EventEmitter {
       )
   }
 
-  observable(script, bindings, rawMessage) {
+  messageObservable(script, bindings, rawMessage) {
     const command = {
       message: this.buildMessage(script, bindings, rawMessage),
     }
@@ -294,11 +294,14 @@ class GremlinClient extends EventEmitter {
         noContentMessage$,
         errorMessages$
       )
-      .flatMap(({ result: { data }}) => data)
-
       .takeUntil(terminationMessages$);
 
     return results$;
+  }
+
+  observable(script, bindings, rawMessage) {
+    return this.messageObservable(script, bindings, rawMessage)
+      .flatMap(({ result: { data }}) => data)
   }
 }
 

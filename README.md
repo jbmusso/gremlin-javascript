@@ -95,10 +95,9 @@ $ `rejectUnauthorized`: when using ssl, whether to reject self-signed certificat
 ### Executing Gremlin queries
 
 The client currently supports three modes:
-* callback mode (with internal buffer)
-* promise mode
-* streaming moderesults
-* streaming protocol messages (low level API, for advanced usages)
+* callback
+* promise
+* Observable (RxJS)
 
 #### Callback mode: client.execute(script, bindings, message, callback)
 
@@ -157,58 +156,34 @@ const fetchByName = async (name) => {
 fetchByName('Alice');
 ```
 
-#### Stream mode
+#### Observable mode
 
-##### client.stream(script, bindings, message)
+##### client.observable(script, bindings, message)
 
-Return a Node.js ReadableStream set in Object mode. The stream emits a distinct `data` event per query result returned by Gremlin Server.
+Return an RxJS `Observable` of results.
 
-Internally, a 1-level flatten is performed on all raw protocol messages returned. If you do not wish this behavior and prefer handling raw protocol messages with batched results, prefer using `client.messageStream()`.
-
-The order in which results are returned is guaranteed, allowing you to effectively use `order` steps and the like in your Gremlin traversal.
-
-The stream emits an `end` event when the client receives the last `statusCode: 299` message returned by Gremlin Server.
+Internally, a 1-level flatten is performed on all protocol messages returned. 
 
 ```javascript
-const query = client.stream('g.V()');
+const query$ = client.observable('g.V()');
 
-// If playing with classic TinkerPop graph, will emit 6 data events
-query.on('data', (result) => {
-  // Handle first vertex
-  console.log(result);
-});
-
-query.on('end', () => {
-  console.log('All results fetched');
-});
+query$.subscribe(
+  (vertex) => console.log(vertex), // will log 6 times,
+  (err) => console.error(err),
+  () => console.log('Done!')
+);
 ```
 
-This allows you to effectively `.pipe()` the stream to any other Node.js WritableStream/TransformStream.
+##### client.messageObservable(script, bindings, message)
 
-##### client.messageStream(script, bindings, message)
-
-A lower level method that returns a `ReadableStream` which emits the raw protocol messages returned by Gremlin Server as distinct `data` events.
-
-If you wish a higher-level stream of `results` rather than protocol messages, please use `client.stream()`.
-
-Although a public method, this is recommended for advanced usages only.
-
-```javascript
-const client = Gremlin.createClient();
-
-const stream = client.messageStream('g.V()');
-
-// Will emit 3 events with a resultIterationBatchSize set to 2 and classic graph defined in gremlin-server.yaml
-stream.on('data', (message) => {
-  console.log(message.result); // Array of 2 vertices
-});
-```
+A lower level method that returns an `Observable` of raw protocol messages return by Gremlin Server.
+Recommended for advanced usages/troubleshooting.
 
 ### Adding bound parameters to your scripts
 
 For better performance and security concerns (script injection), you must send bound parameters (`bindings`) with your scripts.
 
-`client.execute()`, `client.stream()` and `client.messageStream()` share the same function signature: `(script, bindings, querySettings)`.
+`client.execute()`, `client.observable()` and `client.messageObservable()` share the same function signature: `(script, bindings, querySettings)`.
 
 Notes/Gotchas:
 - Any bindings set to `undefined` will be automatically escaped with `null` values (first-level only) in order to generate a valid JSON string sent to Gremlin Server.
@@ -251,7 +226,7 @@ client.execute('g.v(1)', null, { args: { language: 'nashorn' }}, (err, results) 
   // Handle result
 });
 ```
-Basically, all you have to do is provide an Object as third parameter to any `client.stream()`, `client.execute()` or `client.streamMessage()` methods.
+Basically, all you have to do is provide an Object as third parameter to any `client.observable()`, `client.execute()` or `client.messageObservable()` methods.
 
 Because we're not sending any bound parameters (`bindings`) in this example, notice how the second argument **must** be set to `null` so the low level message object is not mistaken with bound arguments.
 
@@ -263,9 +238,9 @@ client.execute('g.v(vid)', { vid: 1 }, { args: { language: 'nashorn' }}, (err, r
 });
 ```
 
-Or in stream mode:
+Or in Observable mode:
 ```javascript
-client.stream('g.v(vid)', { vid: 1 }, { args: { language: 'nashorn' }})
+client.observable('g.v(vid)', { vid: 1 }, { args: { language: 'nashorn' }})
   .pipe(/* ... */);
 ```
 
