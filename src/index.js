@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import template from 'gremlin-template-string';
+export { gremlin as statics } from 'zer';
 
 import GremlinClient from './GremlinClient';
 

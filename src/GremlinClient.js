@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
+import { gremlin, renderChain } from 'zer';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
@@ -343,6 +344,44 @@ class GremlinClient extends EventEmitter {
       this.queue.push(command);
     }
   };
+
+  traversalSource() {
+    const { g } = gremlin;
+
+    let chain = g;
+
+    const awaitable = new Proxy(g, {
+      get: (traversal, name, receiver) => {
+        if (name === 'toPromise') {
+          return () => new Promise((resolve, reject) => {
+            const { query, params } = renderChain(chain);
+            this.execute(query, params, (err, result) => {
+              if (err) {
+                return reject(err);
+              }
+              resolve(result);
+            });
+          });
+        }
+
+        chain = chain[name];
+
+        return new Proxy(traversal, {
+          get(target2, name2, receiver2) {
+            target2 = target2[name];
+            return awaitable;
+          }
+        })[name];
+      },
+      apply(traversal, thisArg, args) {
+        Reflect.apply(chain, null, args);
+
+        return awaitable;
+      }
+    });
+
+    return awaitable;
+  }
 }
 
 export default GremlinClient;

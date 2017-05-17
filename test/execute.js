@@ -1,4 +1,5 @@
-import gremlin from '../';
+import { assert } from 'chai';
+import gremlin, { statics } from '../';
 
 
 describe('.execute()', function() {
@@ -177,5 +178,14 @@ describe('.execute()', function() {
       warnings[0].code.should.equal('MalformedResponse');
       done();
     });
+  });
+
+  it('should support Gremlin-JavaScript language variant', async () => {
+    const client = gremlin.createClient();
+    const g = client.traversalSource();
+    const { both } = statics;
+
+    const results = await g.V().repeat(both('created')).times(2).toPromise();
+    assert.equal(results.length, 16);
   });
 });
