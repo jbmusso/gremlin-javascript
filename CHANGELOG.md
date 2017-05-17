@@ -1,3 +1,8 @@
+## 2.4.0
+- Partial support for Gremlin-JavaScript language variant
+- Update `ws` to `2.3.1`
+- Freeze dependencies with yarn.lock file
+
 ## 2.3.3
 - Update `ws` to `v1.1.1`, fix issue when sending many queries. See #60 #74 (@princjef)
 - Fix issues when receiving orphaned responses. See #73 (@princjef)
