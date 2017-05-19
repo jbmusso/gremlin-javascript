@@ -48,7 +48,7 @@ fetchByName('Alice');
 This library has partial support for [Gremlin-JavaScript language variant](http://tinkerpop.apache.org/docs/3.2.4/reference/#_on_gremlin_language_variants). It currently sends Groovy strings (rather than bytecode) and automatically escapes primitives. However, it does not support sending anonymous functions. Under the hood, it serializes `Traversal` to Groovy using an early version of [zer](https://github.com/jbmusso/zer).
 
 The following works with a recent version of Node.js (tested with v7.6.0):
-```
+```javascript
 import { createClient, statics } from 'gremlin';
 
 const client = createClient();
