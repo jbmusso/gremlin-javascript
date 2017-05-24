@@ -27,15 +27,21 @@ class GremlinClient extends EventEmitter {
     this.options = {
       language: 'gremlin-groovy',
       session: false,
+      ssl: false,
+      user: '',
+      password: '',
       op: 'eval',
       processor: '',
       accept: 'application/json',
       executeHandler,
       ...options,
-      path: path.length && !path.startsWith('/') ? `/${path}` : path
+      path: path && path.length && !path.startsWith('/') ? `/${path}` : path
     }
 
     this.useSession = this.options.session;
+    this.user = this.options.user;
+    this.password = this.options.password;
+    this.ssl = this.options.ssl;
 
     if (this.useSession) {
       this.sessionId = uuid.v1();
@@ -49,12 +55,13 @@ class GremlinClient extends EventEmitter {
     this.connection = this.createConnection({
       port,
       host,
-      path: this.options.path
+      path: this.options.path,
+      ssl: this.ssl
     });
   }
 
-  createConnection({ port, host, path }) {
-    const connection = new WebSocketGremlinConnection({ port, host, path });
+  createConnection({ port, host, path, ssl }) {
+    const connection = new WebSocketGremlinConnection({ port, host, path, ssl });
 
     connection.on('open', () => this.onConnectionOpen());
     connection.on('error', (error) => this.handleError(error));
@@ -64,20 +71,9 @@ class GremlinClient extends EventEmitter {
     return connection;
   }
 
-  closeConnection() {
-    this.connection.close();
-  }
-
   handleError(err) {
     this.connected = false;
     this.emit('error', err);
-  }
-
-  warn(code, message) {
-    this.emit('warning', {
-      code,
-      message
-    });
   }
 
   /**
@@ -87,27 +83,18 @@ class GremlinClient extends EventEmitter {
    * @param {MessageEvent} event
    */
   handleProtocolMessage(message) {
-    let rawMessage, requestId, statusCode, statusMessage;
-    try {
-      const { data } = message;
-      const buffer = new Buffer(data, 'binary');
-      rawMessage = JSON.parse(buffer.toString('utf-8'));
-      requestId = rawMessage.requestId;
-      statusCode = rawMessage.status.code;
-      statusMessage = rawMessage.status.message;
-    } catch (e) {
-      this.warn('MalformedResponse', 'Received malformed response message');
-      return;
-    }
+    const { data } = message;
+    const buffer = new Buffer(data, 'binary');
+    const rawMessage = JSON.parse(buffer.toString('utf-8'));
+    const {
+      requestId,
+      status: {
+        code: statusCode,
+        message: statusMessage
+      }
+    } = rawMessage;
 
-    // If we didn't find a stream for this response, emit a warning on the
-    // client
-    if (!this.commands[requestId]) {
-      this.warn('OrphanedResponse', `Received response for missing or closed request: ${requestId}`);
-      return;
-    }
-
-    const { messageStream = null } = this.commands[requestId];
+    const { messageStream } = this.commands[requestId];
 
     switch (statusCode) {
       case 200: // SUCCESS
@@ -121,6 +108,10 @@ class GremlinClient extends EventEmitter {
         break;
       case 206: // PARTIAL_CONTENT
         messageStream.push(rawMessage);
+        break;
+      case 407: // AUTHENTICATE CHALLANGE
+        const challengeResponse = this.buildChallengeResponse(requestId);
+        this.sendMessage(challengeResponse);
         break;
       default:
         delete this.commands[requestId];
@@ -212,6 +203,21 @@ class GremlinClient extends EventEmitter {
     return message;
   };
 
+  buildChallengeResponse(requestId) {
+    const { processor, op, accept, language, aliases } = this.options;
+    var utf8 = require('utf8');
+    var args = { SASL: utf8.encode('\0' + this.user + '\0' + this.password) };
+    
+    const message = {
+      requestId: requestId,
+      processor,
+      op: 'authentication',
+      args
+    };
+
+    return message;
+  };
+
   sendMessage(message) {
     let serializedMessage = this.options.accept + JSON.stringify(message);
     serializedMessage = unescape(encodeURIComponent(serializedMessage));
@@ -243,8 +249,8 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    * @param {Function} callback
    */
-  execute(script, bindings = {}, message = {}) {
-    let callback = arguments[arguments.length - 1];
+  execute(script, bindings = {}, message = {}, ...args) {
+    let callback = args[args.length - 1];
 
     if (typeof message === 'function') {
       callback = message;
@@ -353,7 +359,7 @@ class GremlinClient extends EventEmitter {
     const awaitable = new Proxy(g, {
       get: (traversal, name, receiver) => {
         if (name === 'toPromise') {
-          return () => new Promise((resolve, reject) => {
+          return () => new Promise((resolve, reject) =>Â {
             const { query, params } = renderChain(chain);
             this.execute(query, params, (err, result) => {
               if (err) {
