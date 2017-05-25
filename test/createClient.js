@@ -87,4 +87,22 @@ describe('.createClient()', function() {
       client.options.path.should.equal('/foo/bar');
     });
   });
+
+  describe.skip('Secure WebSocket', () => {
+    it('should support secure SSL websockets', (done) => {
+      const client = gremlin.createClient({
+        ssl: true,
+        rejectUnauthorized: false, // using TP-dev self-signed certificate
+      });
+
+      client.options.ssl.should.equal(true);
+      client.options.rejectUnauthorized.should.equal(false);
+
+      client.execute('g.V()', (err, results) => {
+        results.length.should.equal(6);
+        done();
+      });
+    });
+  });
 });
+
