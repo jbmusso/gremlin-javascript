@@ -89,6 +89,8 @@ The `options` object currently allows you to set the following options:
 * `processor` (advanced usage): The name of the OpProcessor to utilize (default: `""`)
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
 * `path`: a custom URL connection path if connecting to a Gremlin server behind a WebSocket proxy
+* `ssl`: whether to use secure WebSockets or not (default: `false`)
+$ `rejectUnauthorized`: when using ssl, whether to reject self-signed certificates or not (default: `true`). Useful in development mode when using gremlin-server self signed certificates. Do NOT use self-signed certificates with this option in production.
 
 ### Executing Gremlin queries
 
