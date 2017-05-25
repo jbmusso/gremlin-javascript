@@ -1,3 +1,6 @@
+## 2.5.0
+- Support secure WebSockets
+
 ## 2.4.0
 - Partial support for Gremlin-JavaScript language variant
 - Update `ws` to `2.3.1`
