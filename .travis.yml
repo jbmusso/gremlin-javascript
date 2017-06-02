@@ -14,11 +14,8 @@ cache:
   yarn: true
 
 install:
-  # install Oracle JDK8
   - sh -c ./build/jdk8-install.sh
-  # install gremlin-server
   - sh -c ./build/gremlin-server/install.sh
-  # install dependencies
   - yarn
 
 before_script:
