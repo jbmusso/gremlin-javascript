@@ -7,8 +7,8 @@ node_js:
 sudo: required
 
 env:
-  - GREMLINSERVER_VERSION="3.2.4"
-  - GREMLINSERVER_VERSION="3.1.6"
+  - GREMLIN_SERVER_VERSION="3.2.4"
+  - GREMLIN_SERVER_VERSION="3.1.6"
 
 cache:
   yarn: true
