@@ -1,3 +1,6 @@
+## 2.5.1
+- Push properly built files
+
 ## 2.5.0
 - Support secure WebSockets
 
