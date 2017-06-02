@@ -4,7 +4,8 @@
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel ./src -d lib",
+    "prebuild": "rimraf ./lib",
+    "build": "babel ./src -d lib --ignore '**/*.test.js'",
     "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
     "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
     "build:watch": "npm run build -- --watch",
@@ -72,6 +73,7 @@
     "karma-safari-launcher": "^0.1.1",
     "mocha": "^1.21.4",
     "mocha-lcov-reporter": "^1.2.0",
+    "rimraf": "^2.6.1",
     "serve-static": "^1.5.3",
     "vinyl-source-stream": "^1.0.0",
     "webpack": "^1.12.11",
