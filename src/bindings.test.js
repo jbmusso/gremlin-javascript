@@ -1,3 +1,4 @@
+require('chai').should();
 /*jshint -W030 */
 import gremlin from '../';
 

@@ -1,3 +1,4 @@
+require('chai').should();
 import { createClient, makeTemplateTag } from '../';
 import { assert } from 'chai';
 

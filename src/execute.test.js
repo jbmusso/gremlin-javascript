@@ -1,3 +1,4 @@
+require('chai').should();
 import { assert } from 'chai';
 import gremlin, { statics } from '../';
 

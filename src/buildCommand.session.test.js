@@ -1,4 +1,5 @@
-'use strict';
+require('chai').should();
+
 import gremlin from '../';
 
 describe('.buildMessage()', function() {

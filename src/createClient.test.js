@@ -1,3 +1,4 @@
+require('chai').should();
 import gremlin from '../';
 
 

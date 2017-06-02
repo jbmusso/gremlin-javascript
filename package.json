@@ -12,8 +12,8 @@
     "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "examples:browser": "babel-node examples/server",
     "examples:node": "babel-node examples/node-example",
-    "test:node": "NODE_TLS_REJECT_UNAUTHORIZED=0 mocha ./test --compilers js:babel-register --recursive --reporter spec",
-    "test:node:watch": "npm run test:node -- --watch"
+    "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 mocha $(find src -path '*test.js') --compilers js:babel-register --recursive --reporter spec",
+    "test:watch": "npm run test -- --watch"
   },
   "repository": {
     "type": "git",
