@@ -18,4 +18,11 @@ cp ./build/gremlin-server/gremlin-server-js.yaml $HOME/apache-tinkerpop-gremlin-
 cd $HOME/apache-tinkerpop-gremlin-server-$GREMLIN_SERVER_VERSION
 bin/gremlin-server.sh conf/gremlin-server-js.yaml > /dev/null 2>&1 &
 cd $TRAVIS_BUILD_DIR
-sleep 30
+
+
+echo "Waiting for gremlin-server to start listening on port 8182..."
+while ! nc -z localhost 8182; do
+  sleep 0.1 # wait for 1/10 of the second before check again
+done
+
+echo "gremlin-server started!"
