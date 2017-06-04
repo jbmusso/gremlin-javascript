@@ -93,8 +93,6 @@ class GremlinClient extends EventEmitter {
    * @param {MessageEvent} event
    */
   handleProtocolMessage(message) {
-    console.log('------------------------------------------------')
-    console.log(this.options)
     let rawMessage, requestId, statusCode, statusMessage;
     try {
       const { data } = message;
