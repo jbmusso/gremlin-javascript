@@ -2,7 +2,6 @@ require('chai').should();
 /*jshint -W030 */
 import gremlin from './';
 
-
 describe('Bindings', function() {
   it('should support bindings with client.execute()', function(done) {
     var client = gremlin.createClient();
@@ -10,19 +9,6 @@ describe('Bindings', function() {
     client.execute('g.V(x)', { x: 1 }, function(err, result) {
       (err === null).should.be.true;
       result.length.should.equal(1);
-      done();
-    });
-  });
-
-  it('should support bindings with client.stream()', function(done) {
-    var client = gremlin.createClient();
-    var stream = client.stream('g.V(x)', { x: 1 });
-
-    stream.on('data', function(result) {
-      result.id.should.equal(1);
-    });
-
-    stream.on('end', function() {
       done();
     });
   });
@@ -40,26 +26,26 @@ describe('Bindings', function() {
     });
   });
 
-  describe('undefined bindings', function () {
-    it(`should remap 'undefined' bindings as 'null' values`, (done) => {
+  describe('undefined bindings', function() {
+    it(`should remap 'undefined' bindings as 'null' values`, done => {
       const client = gremlin.createClient();
 
-      client.execute('foo', { foo: undefined }, (err, [foo]) => {
+      client.execute('foo', { foo: undefined }, (err, [foo]) => {
         (err === null).should.be.true;
         (foo === null).should.be.true;
         done();
       });
     });
 
-    it(`should not remap falsey bindings as 'null' values`, (done) => {
+    it(`should not remap falsey bindings as 'null' values`, done => {
       const client = gremlin.createClient();
 
-      client.execute('[foo, bar]', { foo: '', bar: 0 }, (err, [foo, bar]) => {
+      client.execute('[foo, bar]', { foo: '', bar: 0 }, (err, [foo, bar]) => {
         (err === null).should.be.true;
         (foo === '').should.be.true;
         (bar === 0).should.be.true;
         done();
       });
     });
-  })
+  });
 });

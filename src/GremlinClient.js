@@ -4,14 +4,33 @@ import { EventEmitter } from 'events';
 
 import uuid from 'node-uuid';
 import _ from 'lodash';
-import highland from 'highland';
 import { gremlin, renderChain } from 'zer';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
-import MessageStream from './MessageStream';
-import executeHandler from './executeHandler';
 import * as Utils from './utils';
 
+import Rx from 'rx';
+
+
+const hasCode = (filterCode) => ({ status: { code } }) => code === filterCode;
+
+const isErrorMessage = ({ status: { code }}) => [200, 204, 206].indexOf(code) === -1;
+
+const serializeToBinary = (message, accept) => {
+  let serializedMessage = accept + JSON.stringify(message);
+  serializedMessage = unescape(encodeURIComponent(serializedMessage));
+
+  // Let's start packing the message into binary
+  // mimeLength(1) + mimeType Length + serializedMessage Length
+  let binaryMessage = new Uint8Array(1 + serializedMessage.length);
+  binaryMessage[0] = accept.length;
+
+  for (let i = 0; i < serializedMessage.length; i++) {
+    binaryMessage[i + 1] = serializedMessage.charCodeAt(i);
+  }
+
+  return binaryMessage;
+}
 
 class GremlinClient extends EventEmitter {
   constructor(port = 8182, host = 'localhost', options = {}) {
@@ -30,12 +49,11 @@ class GremlinClient extends EventEmitter {
       op: 'eval',
       processor: '',
       accept: 'application/json',
-      executeHandler,
       ssl: false,
       rejectUnauthorized: true,
       ...options,
-      path: path.length && !path.startsWith('/') ? `/${path}` : path
-    }
+      path: path.length && !path.startsWith('/') ? `/${path}` : path,
+    };
 
     this.useSession = this.options.session;
 
@@ -48,26 +66,68 @@ class GremlinClient extends EventEmitter {
 
     this.commands = {};
 
+    this.commands$ = new Rx.Subject();
+    this.commands$.subscribe((command) => {
+      const { message: { requestId } } = command;
+      this.commands[requestId] = command
+    });
+
     const { ssl, rejectUnauthorized } = this.options;
 
-    this.connection = this.createConnection({
+    const connection = this.createConnection({
       port,
       host,
       path: this.options.path,
       ssl,
-      rejectUnauthorized,
+      rejectUnauthorized,      
     });
+
+    const connections$ = Rx.Observable.create((observer) => observer.next(connection));
+
+    const open$ = connections$
+      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'open'));
+
+    const error$ = connections$
+      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'error'));
+
+    const incomingMessages$ = connections$
+      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'message'))
+      .map(({ data }) => {
+        const buffer = new Buffer(data, 'binary');
+        const rawMessage = JSON.parse(buffer.toString('utf-8'));
+
+        return rawMessage;
+      });
+    const close$ = connections$
+      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'close'));
+
+    const canSend$ = Rx.Observable.merge(
+      open$.map(true),
+      error$.map(false),
+      close$.map(false)
+    )
+
+    open$.subscribe((connection) => this.onConnectionOpen());
+    error$.subscribe((error) => this.handleError(error));
+
+
+    this.incomingMessages$ = incomingMessages$;
+
+    close$.subscribe((event) => this.handleDisconnection(event));
+
+    const outgoingMessages$ = this.commands$
+      .map(({ message }) => serializeToBinary(message, this.options.accept))
+      .pausableBuffered(canSend$)
+      .combineLatest(connections$);
+
+    outgoingMessages$
+      .subscribe(([binaryMessage, connection]) =>
+        connection.sendMessage(binaryMessage)
+      );
   }
 
   createConnection({ port, host, path, ssl, rejectUnauthorized }) {
-    const connection = new WebSocketGremlinConnection({ port, host, path, ssl, rejectUnauthorized });
-
-    connection.on('open', () => this.onConnectionOpen());
-    connection.on('error', (error) => this.handleError(error));
-    connection.on('message', (message) => this.handleProtocolMessage(message));
-    connection.on('close', (event) => this.handleDisconnection(event))
-
-    return connection;
+    return new WebSocketGremlinConnection({ port, host, path, ssl, rejectUnauthorized });
   }
 
   closeConnection() {
@@ -82,57 +142,8 @@ class GremlinClient extends EventEmitter {
   warn(code, message) {
     this.emit('warning', {
       code,
-      message
+      message,
     });
-  }
-
-  /**
-   * Process all incoming raw message events sent by Gremlin Server, and dispatch
-   * to the appropriate command.
-   *
-   * @param {MessageEvent} event
-   */
-  handleProtocolMessage(message) {
-    let rawMessage, requestId, statusCode, statusMessage;
-    try {
-      const { data } = message;
-      const buffer = new Buffer(data, 'binary');
-      rawMessage = JSON.parse(buffer.toString('utf-8'));
-      requestId = rawMessage.requestId;
-      statusCode = rawMessage.status.code;
-      statusMessage = rawMessage.status.message;
-    } catch (e) {
-      this.warn('MalformedResponse', 'Received malformed response message');
-      return;
-    }
-
-    // If we didn't find a stream for this response, emit a warning on the
-    // client
-    if (!this.commands[requestId]) {
-      this.warn('OrphanedResponse', `Received response for missing or closed request: ${requestId}`);
-      return;
-    }
-
-    const { messageStream = null } = this.commands[requestId];
-
-    switch (statusCode) {
-      case 200: // SUCCESS
-        delete this.commands[requestId]; // TODO: optimize performance
-        messageStream.push(rawMessage);
-        messageStream.push(null);
-        break;
-      case 204: // NO_CONTENT
-        delete this.commands[requestId];
-        messageStream.push(null);
-        break;
-      case 206: // PARTIAL_CONTENT
-        messageStream.push(rawMessage);
-        break;
-      default:
-        delete this.commands[requestId];
-        messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
-        break;
-    }
   }
 
   /**
@@ -142,8 +153,6 @@ class GremlinClient extends EventEmitter {
   onConnectionOpen() {
     this.connected = true;
     this.emit('connect');
-
-    this.executeQueue();
   };
 
   /**
@@ -152,20 +161,9 @@ class GremlinClient extends EventEmitter {
   handleDisconnection(event) {
     this.cancelPendingCommands({
       message: 'WebSocket closed',
-      details: event
+      details: event,
     });
-  };
-
-  /**
-   * Process the current command queue, sending commands to Gremlin Server
-   * (First In, First Out).
-   */
-  executeQueue() {
-    while (this.queue.length > 0) {
-      let { message } = this.queue.shift();
-      this.sendMessage(message);
-    }
-  };
+  }
 
   /**
    * @param {Object} reason
@@ -180,11 +178,11 @@ class GremlinClient extends EventEmitter {
     this.queue.length = 0;
     this.commands = {};
 
-    Object.keys(commands).forEach((key) => {
+    Object.keys(commands).forEach(key => {
       command = commands[key];
       command.messageStream.emit('error', error);
     });
-  };
+  }
 
   /**
    * For a given script string and optional bound parameters, build a protocol
@@ -195,7 +193,10 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    */
   buildMessage(rawScript, rawBindings = {}, baseMessage = {}) {
-    let { gremlin, bindings } = Utils.buildQueryFromSignature(rawScript, rawBindings);
+    let { gremlin, bindings } = Utils.buildQueryFromSignature(
+      rawScript,
+      rawBindings,
+    );
     const { processor, op, accept, language, aliases } = this.options;
 
     const baseArgs = { gremlin, bindings, accept, language, aliases };
@@ -206,7 +207,7 @@ class GremlinClient extends EventEmitter {
       processor,
       op,
       args,
-      ...baseMessage
+      ...baseMessage,
     };
 
     if (this.useSession) {
@@ -216,30 +217,11 @@ class GremlinClient extends EventEmitter {
     }
 
     return message;
-  };
-
-  sendMessage(message) {
-    let serializedMessage = this.options.accept + JSON.stringify(message);
-    serializedMessage = unescape(encodeURIComponent(serializedMessage));
-
-    // Let's start packing the message into binary
-    // mimeLength(1) + mimeType Length + serializedMessage Length
-    let binaryMessage = new Uint8Array(1 + serializedMessage.length);
-    binaryMessage[0] = this.options.accept.length;
-
-    for (let i = 0; i < serializedMessage.length; i++) {
-      binaryMessage[i + 1] = serializedMessage.charCodeAt(i);
-    }
-
-    this.connection.sendMessage(binaryMessage);
-  };
+  }
 
   /**
    * Asynchronously send a script to Gremlin Server for execution and fire
    * the provided callback when all results have been fetched.
-   *
-   * This method internally uses a stream to handle the potential concatenation
-   * of results.
    *
    * Callback signature: (Error, Array<result>)
    *
@@ -249,144 +231,77 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    * @param {Function} callback
    */
-  execute(script, bindings = {}, message = {}) {
-    let callback = arguments[arguments.length - 1];
+  execute(script, bindings = {}, message = {}, callback) {
+    callback = arguments[arguments.length - 1];
 
     if (typeof message === 'function') {
       callback = message;
       message = {};
     }
 
-    const messageStream = this.messageStream(script, bindings, message);
-
-    // TO CHECK: errors handling could be improved
-    // See https://groups.google.com/d/msg/nodejs/lJYT9hZxFu0/L59CFbqWGyYJ
-    // for an example using domains
-    const { executeHandler } = this.options;
-
-    executeHandler(messageStream, callback);
+    this.observable(script, bindings, message)
+      .toArray()
+      .subscribe(
+        (results) => callback(null, results),
+        (err) => callback(err)
+      )
   }
 
-  /**
-   * Execute the script and return a stream of distinct/single results.
-   * This method reemits a distinct data event for each returned result, which
-   * makes the stream behave as if `resultIterationBatchSize` was set to 1.
-   *
-   * If you do not wish this behavior, please use client.messageStream() instead.
-   *
-   * Even though this method uses Highland.js internally, it does not return
-   * a high level Highland readable stream so we do not risk having to deal
-   * with unexpected API breaking changes as Highland.js evolves.
-   *
-   * @return {ReadableStream} A Node.js Stream2
-   */
-  stream(script, bindings, message) {
-    const messageStream = this.messageStream(script, bindings, message);
-    const _ = highland; // override lo-dash locally
-
-    // Create a local highland 'through' pipeline so we don't expose
-    // a Highland stream to the end user, but a standard Node.js Stream2
-    const through = _.pipeline(
-      _.map(({ result: { data }}) => data),
-      _.sequence()
-    );
-
-    let rawStream = messageStream.pipe(through);
-
-    messageStream.on('error', (e) => {
-      rawStream.emit('error', new Error(e));
-    });
-
-    return rawStream;
-  };
-
-  /**
-   * Execute the script and return a stream of raw messages returned by Gremlin
-   * Server.
-   * This method does not reemit one distinct data event per result. It directly
-   * emits the raw messages returned by Gremlin Server as they are received.
-   *
-   * Although public, this is a low level method intended to be used for
-   * advanced usages.
-   *
-   * @public
-   * @param {String|Function} script
-   * @param {Object} bindings
-   * @param {Object} message
-   * @return {MessageStream}
-   */
-  messageStream(script, bindings, rawMessage) {
-    let stream = new MessageStream({ objectMode: true });
-
+  messageObservable(script, bindings, rawMessage) {
     const command = {
       message: this.buildMessage(script, bindings, rawMessage),
-      messageStream: stream
-    };
-
-    this.sendCommand(command); //todo improve for streams
-
-    return stream;
-  };
-
-  /**
-   * Send a command to Gremlin Server, or add it to queue if the connection
-   * is not established.
-   *
-   * @param {Object} command
-   */
-  sendCommand(command) {
-    const {
-      message,
-      message: {
-        requestId
-      }
-    } = command;
-
-    this.commands[requestId] = command;
-
-    if (this.connected) {
-      this.sendMessage(message);
-    } else {
-      this.queue.push(command);
     }
-  };
 
-  traversalSource() {
-    const { g } = gremlin;
+    // This actually sends the command to Gremlin Server
+    this.commands$.onNext(command);
 
-    let chain = g;
+    // Create a new Observable of of incoming messages, but filter only
+    // incoming messages to the command we just send.
+    const commandMessages$ = this.incomingMessages$
+      .filter(({ requestId }) => requestId === command.message.requestId);
 
-    const awaitable = new Proxy(g, {
-      get: (traversal, name, receiver) => {
-        if (name === 'toPromise') {
-          return () => new Promise((resolve, reject) => {
-            const { query, params } = renderChain(chain);
-            this.execute(query, params, (err, result) => {
-              if (err) {
-                return reject(err);
-              }
-              resolve(result);
-            });
-          });
-        }
+    // Off of these messages, create new Observables for each message code
+    // TODO: this could be a custom operator.
+    const successMessage$ = commandMessages$
+      .filter(hasCode(200))
+    const continuationMessages$ = commandMessages$
+      .filter(hasCode(206))
+    const noContentMessage$ = commandMessages$
+      .filter(hasCode(204))
+      // Rewrite these in order to ensure the callback is always fired with an
+      // Empty Array rather than a null value.
+      // Mutating is perfectly fine here.
+      .map((message) => {
+        message.result.data = []
+        return message;
+      });
 
-        chain = chain[name];
+    // That Observable will ultimately emit a single object which indicates
+    // that we should not expect any other messages;
+    const terminationMessages$ = Rx.Observable.merge(
+      successMessage$, noContentMessage$
+    );
 
-        return new Proxy(traversal, {
-          get(target2, name2, receiver2) {
-            target2 = target2[name];
-            return awaitable;
-          }
-        })[name];
-      },
-      apply(traversal, thisArg, args) {
-        Reflect.apply(chain, null, args);
+    const errorMessages$ = commandMessages$
+      .filter(isErrorMessage)
+      .flatMap(({ status: { code, message } }) =>
+        Rx.Observable.throw(new Error(message + ' (Error '+ code +')'))
+      );
 
-        return awaitable;
-      }
-    });
+    const results$ = Rx.Observable.merge(
+        successMessage$,
+        continuationMessages$,
+        noContentMessage$,
+        errorMessages$
+      )
+      .takeUntil(terminationMessages$);
 
-    return awaitable;
+    return results$;
+  }
+
+  observable(script, bindings, rawMessage) {
+    return this.messageObservable(script, bindings, rawMessage)
+      .flatMap(({ result: { data }}) => data)
   }
 }
 
