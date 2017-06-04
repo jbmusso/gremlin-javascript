@@ -16,12 +16,10 @@ cache:
   yarn: true
 
 before_install:
-  - docker run -d -p 8182:8182 jbmusso/gremlin-server:$GREMLIN_SERVER_VERSION
+  - docker run -d -p 8182:8182 jbmusso/gremlin-server:$GREMLIN_SERVER_VERSION conf/gremlin-server-classic.yaml
   - docker ps -a
 
 install:
-  # - sh -c ./build/jdk8-install.sh
-  # - sh -c ./build/gremlin-server/install.sh
   - yarn
 
 before_script:
