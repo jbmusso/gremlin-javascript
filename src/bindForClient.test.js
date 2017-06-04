@@ -1,6 +1,6 @@
 require('chai').should();
 
-import { createClient, bindForClient } from '../';
+import { createClient, bindForClient } from './';
 import { assert } from 'chai';
 
 

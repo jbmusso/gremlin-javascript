@@ -1,5 +1,6 @@
 require('chai').should();
-import gremlin from '../';
+import gremlin from './';
+import { assert } from 'chai';
 
 
 describe('.createClient()', function() {
@@ -89,9 +90,9 @@ describe('.createClient()', function() {
     });
   });
 
-  describe.skip('Secure WebSocket', () => {
+  describe('Secure WebSocket', () => {
     it('should support secure SSL websockets', (done) => {
-      const client = gremlin.createClient({
+      const client = gremlin.createClient(8192/* start with docker-compose */, {
         ssl: true,
         rejectUnauthorized: false, // using TP-dev self-signed certificate
       });
@@ -99,8 +100,8 @@ describe('.createClient()', function() {
       client.options.ssl.should.equal(true);
       client.options.rejectUnauthorized.should.equal(false);
 
-      client.execute('g.V()', (err, results) => {
-        results.length.should.equal(6);
+      client.execute('1+1', (err, result) => {
+        assert.equal(result, 2);
         done();
       });
     });

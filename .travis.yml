@@ -1,26 +1,30 @@
 language: node_js
 
+services:
+  - docker
+
 node_js:
-  - 5.9
-  - 5
+  - 7
+  - 6
 
 sudo: required
 
 env:
-  - GREMLINSERVER_VERSION="3.1.1"
+  GREMLIN_SERVER_VERSION: 3.2.4
+
+cache:
+  yarn: true
+
+before_install:
+  - docker-compose up -d
 
 install:
-  # install Oracle JDK8
-  - sh -c ./build/jdk8-install.sh
-  # install gremlin-server
-  - sh -c ./build/gremlin-server/install.sh
-  # install dependencies
-  - npm install
+  - yarn
 
 before_script:
-  - npm run build
+  - yarn build
 
-script: npm run test:node
+script: yarn test
 
 after_script:
-  - npm run coverage:travis
+  - yarn coverage:travis
