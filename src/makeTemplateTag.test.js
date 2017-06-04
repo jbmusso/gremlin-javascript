@@ -1,5 +1,5 @@
 require('chai').should();
-import { createClient, makeTemplateTag } from '../';
+import { createClient, makeTemplateTag } from './';
 import { assert } from 'chai';
 
 const client = createClient();

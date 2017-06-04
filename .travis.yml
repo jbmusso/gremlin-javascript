@@ -16,8 +16,7 @@ cache:
   yarn: true
 
 before_install:
-  - docker run -d -p 8182:8182 jbmusso/gremlin-server:$GREMLIN_SERVER_VERSION conf/gremlin-server-classic.yaml
-  - docker ps -a
+  - docker-compose up
 
 install:
   - yarn

@@ -1,6 +1,6 @@
 require('chai').should();
 
-import gremlin from '../';
+import gremlin from './';
 
 describe('.buildMessage()', function() {
   describe('session', function() {

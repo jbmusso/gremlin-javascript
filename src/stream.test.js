@@ -1,5 +1,5 @@
 require('chai').should();
-import gremlin from '../';
+import gremlin from './';
 
 
 describe('.stream()', function() {

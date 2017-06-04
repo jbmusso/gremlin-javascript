@@ -1,6 +1,6 @@
 require('chai').should();
 /*jshint -W030 */
-import gremlin from '../';
+import gremlin from './';
 
 
 describe('Bindings', function() {

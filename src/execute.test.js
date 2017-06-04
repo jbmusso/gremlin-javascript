@@ -1,6 +1,6 @@
 require('chai').should();
 import { assert } from 'chai';
-import gremlin, { statics } from '../';
+import gremlin, { statics } from './';
 
 
 describe('.execute()', function() {

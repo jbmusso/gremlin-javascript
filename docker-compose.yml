@@ -1,0 +1,16 @@
+---
+version: '2'
+services:
+  gremlin-server:
+    image: jbmusso/gremlin-server:${GREMLIN_SERVER_VERSION}
+    command: conf/gremlin-server-classic.yaml
+    ports:
+      - "8182:8182"
+  gremlin-server-secure:
+    image: jbmusso/gremlin-server:${GREMLIN_SERVER_VERSION}
+    entrypoint: /opt/gremlin-server/bin/gremlin-server.sh
+    command: conf/gremlin-server-secure-ci.yaml
+    volumes:
+      - ./ci/conf/gremlin-server-secure-ci.yaml:/opt/gremlin-server/conf/gremlin-server-secure-ci.yaml
+    ports:
+      - "8192:8182"
