@@ -15,7 +15,10 @@ describe('.buildMessage()', function() {
 
     it('should allow setting a custom processor', function() {
       var customProcessor = 'shouldNotBeIgnored';
-      var client = gremlin.createClient({ session: true, processor: customProcessor });
+      var client = gremlin.createClient({
+        session: true,
+        processor: customProcessor,
+      });
 
       var message = client.buildMessage();
 
@@ -28,7 +31,9 @@ describe('.buildMessage()', function() {
 
       var client = gremlin.createClient(8182, 'localhost', { session: true });
 
-      var message = client.buildMessage(undefined, undefined, { processor: customProcessor });
+      var message = client.buildMessage(undefined, undefined, {
+        processor: customProcessor,
+      });
 
       message.processor.should.equal(customProcessor);
     });

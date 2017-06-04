@@ -2,7 +2,6 @@ require('chai').should();
 import { assert } from 'chai';
 import gremlin, { statics } from './';
 
-
 describe('.execute()', function() {
   it('should return a result and a response', function(done) {
     var client = gremlin.createClient();
@@ -17,7 +16,7 @@ describe('.execute()', function() {
   it('should queue command before the client is connected', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V()', function() { });
+    client.execute('g.V()', function() {});
     client.queue.length.should.equal(1);
     done();
   });
@@ -37,30 +36,40 @@ describe('.execute()', function() {
   it('should handle optional args', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V(1)', null, { args: { language: 'gremlin-groovy' }}, function(err, result) {
-      (err === null).should.be.true;
-      result.length.should.equal(1);
-      done();
-    });
+    client.execute(
+      'g.V(1)',
+      null,
+      { args: { language: 'gremlin-groovy' } },
+      function(err, result) {
+        (err === null).should.be.true;
+        result.length.should.equal(1);
+        done();
+      },
+    );
   });
 
   it('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
 
-    client.execute('g.V(x)', { x: 1 }, { args: { language: 'gremlin-groovy' }}, function(err, result) {
-      (err === null).should.be.true;
-      result.length.should.equal(1);
-      done();
-    });
+    client.execute(
+      'g.V(x)',
+      { x: 1 },
+      { args: { language: 'gremlin-groovy' } },
+      function(err, result) {
+        (err === null).should.be.true;
+        result.length.should.equal(1);
+        done();
+      },
+    );
   });
 
-  it('should handle an object as first argument', (done) => {
+  it('should handle an object as first argument', done => {
     const client = gremlin.createClient();
     const query = {
       gremlin: 'g.V(vid)',
       bindings: {
-        vid: 1
-      }
+        vid: 1,
+      },
     };
 
     client.execute(query, (err, result) => {
@@ -71,13 +80,13 @@ describe('.execute()', function() {
     });
   });
 
-  it('should merge bindings with first-argument object own params', (done) => {
+  it('should merge bindings with first-argument object own params', done => {
     const client = gremlin.createClient();
     const query = {
       gremlin: 'g.V(vid, second)',
       bindings: {
-        vid: 1
-      }
+        vid: 1,
+      },
     };
 
     client.execute(query, { second: 2 }, (err, result) => {
@@ -100,7 +109,9 @@ describe('.execute()', function() {
     });
   });
 
-  it('should fire the callback with an empty array when handling a 204 NO_CONTENT code', function (done) {
+  it('should fire the callback with an empty array when handling a 204 NO_CONTENT code', function(
+    done,
+  ) {
     // @see https://github.com/jbmusso/gremlin-javascript/issues/17
     var client = gremlin.createClient();
     var script = 'g.V().limit(0)';
@@ -112,8 +123,8 @@ describe('.execute()', function() {
     });
   });
 
-  it('should execute query against an aliased graph', (done) => {
-    const client = gremlin.createClient({ aliases: { h: 'g' }});
+  it('should execute query against an aliased graph', done => {
+    const client = gremlin.createClient({ aliases: { h: 'g' } });
 
     client.execute('h.V()', (err, results) => {
       (err === null).should.be.true;
@@ -123,17 +134,17 @@ describe('.execute()', function() {
     });
   });
 
-  it('should serialize payloads with utf-8 special characters', (done) => {
+  it('should serialize payloads with utf-8 special characters', done => {
     const client = gremlin.createClient();
 
     client.execute(`g.V().has('name', 'é')`, (err, results) => {
       (err === null).should.be.true;
       results.length.should.equal(0);
-      done()
+      done();
     });
   });
 
-  it('should handle receiving responses to missing requests', (done) => {
+  it('should handle receiving responses to missing requests', done => {
     const client = gremlin.createClient();
     const warnings = [];
     client.on('warning', warning => {
@@ -144,13 +155,13 @@ describe('.execute()', function() {
       requestId: 'nonexistant',
       status: {
         code: 200,
-        message: 'data'
-      }
+        message: 'data',
+      },
     };
 
     warnings.length.should.equal(0);
     client.handleProtocolMessage({
-      data: new Buffer(JSON.stringify(message), 'utf8')
+      data: new Buffer(JSON.stringify(message), 'utf8'),
     });
 
     // Have to cycle so that the event emitter can fire
@@ -161,7 +172,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should handle malformed responses', (done) => {
+  it('should handle malformed responses', done => {
     const client = gremlin.createClient();
     const warnings = [];
     client.on('warning', warning => {
@@ -170,7 +181,7 @@ describe('.execute()', function() {
 
     warnings.length.should.equal(0);
     client.handleProtocolMessage({
-      data: new Buffer('badmessage', 'utf8')
+      data: new Buffer('badmessage', 'utf8'),
     });
 
     // Have to cycle do that the event emitter can fire

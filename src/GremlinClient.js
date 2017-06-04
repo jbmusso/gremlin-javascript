@@ -12,7 +12,6 @@ import MessageStream from './MessageStream';
 import executeHandler from './executeHandler';
 import * as Utils from './utils';
 
-
 class GremlinClient extends EventEmitter {
   constructor(port = 8182, host = 'localhost', options = {}) {
     super();
@@ -34,8 +33,8 @@ class GremlinClient extends EventEmitter {
       ssl: false,
       rejectUnauthorized: true,
       ...options,
-      path: path.length && !path.startsWith('/') ? `/${path}` : path
-    }
+      path: path.length && !path.startsWith('/') ? `/${path}` : path,
+    };
 
     this.useSession = this.options.session;
 
@@ -60,12 +59,18 @@ class GremlinClient extends EventEmitter {
   }
 
   createConnection({ port, host, path, ssl, rejectUnauthorized }) {
-    const connection = new WebSocketGremlinConnection({ port, host, path, ssl, rejectUnauthorized });
+    const connection = new WebSocketGremlinConnection({
+      port,
+      host,
+      path,
+      ssl,
+      rejectUnauthorized,
+    });
 
     connection.on('open', () => this.onConnectionOpen());
-    connection.on('error', (error) => this.handleError(error));
-    connection.on('message', (message) => this.handleProtocolMessage(message));
-    connection.on('close', (event) => this.handleDisconnection(event))
+    connection.on('error', error => this.handleError(error));
+    connection.on('message', message => this.handleProtocolMessage(message));
+    connection.on('close', event => this.handleDisconnection(event));
 
     return connection;
   }
@@ -82,7 +87,7 @@ class GremlinClient extends EventEmitter {
   warn(code, message) {
     this.emit('warning', {
       code,
-      message
+      message,
     });
   }
 
@@ -109,7 +114,10 @@ class GremlinClient extends EventEmitter {
     // If we didn't find a stream for this response, emit a warning on the
     // client
     if (!this.commands[requestId]) {
-      this.warn('OrphanedResponse', `Received response for missing or closed request: ${requestId}`);
+      this.warn(
+        'OrphanedResponse',
+        `Received response for missing or closed request: ${requestId}`,
+      );
       return;
     }
 
@@ -130,7 +138,10 @@ class GremlinClient extends EventEmitter {
         break;
       default:
         delete this.commands[requestId];
-        messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
+        messageStream.emit(
+          'error',
+          new Error(statusMessage + ' (Error ' + statusCode + ')'),
+        );
         break;
     }
   }
@@ -144,7 +155,7 @@ class GremlinClient extends EventEmitter {
     this.emit('connect');
 
     this.executeQueue();
-  };
+  }
 
   /**
    * @param {CloseEvent} event
@@ -152,9 +163,9 @@ class GremlinClient extends EventEmitter {
   handleDisconnection(event) {
     this.cancelPendingCommands({
       message: 'WebSocket closed',
-      details: event
+      details: event,
     });
-  };
+  }
 
   /**
    * Process the current command queue, sending commands to Gremlin Server
@@ -165,7 +176,7 @@ class GremlinClient extends EventEmitter {
       let { message } = this.queue.shift();
       this.sendMessage(message);
     }
-  };
+  }
 
   /**
    * @param {Object} reason
@@ -180,11 +191,11 @@ class GremlinClient extends EventEmitter {
     this.queue.length = 0;
     this.commands = {};
 
-    Object.keys(commands).forEach((key) => {
+    Object.keys(commands).forEach(key => {
       command = commands[key];
       command.messageStream.emit('error', error);
     });
-  };
+  }
 
   /**
    * For a given script string and optional bound parameters, build a protocol
@@ -195,7 +206,10 @@ class GremlinClient extends EventEmitter {
    * @param {Object} message
    */
   buildMessage(rawScript, rawBindings = {}, baseMessage = {}) {
-    let { gremlin, bindings } = Utils.buildQueryFromSignature(rawScript, rawBindings);
+    let { gremlin, bindings } = Utils.buildQueryFromSignature(
+      rawScript,
+      rawBindings,
+    );
     const { processor, op, accept, language, aliases } = this.options;
 
     const baseArgs = { gremlin, bindings, accept, language, aliases };
@@ -206,7 +220,7 @@ class GremlinClient extends EventEmitter {
       processor,
       op,
       args,
-      ...baseMessage
+      ...baseMessage,
     };
 
     if (this.useSession) {
@@ -216,7 +230,7 @@ class GremlinClient extends EventEmitter {
     }
 
     return message;
-  };
+  }
 
   sendMessage(message) {
     let serializedMessage = this.options.accept + JSON.stringify(message);
@@ -232,7 +246,7 @@ class GremlinClient extends EventEmitter {
     }
 
     this.connection.sendMessage(binaryMessage);
-  };
+  }
 
   /**
    * Asynchronously send a script to Gremlin Server for execution and fire
@@ -287,18 +301,18 @@ class GremlinClient extends EventEmitter {
     // Create a local highland 'through' pipeline so we don't expose
     // a Highland stream to the end user, but a standard Node.js Stream2
     const through = _.pipeline(
-      _.map(({ result: { data }}) => data),
-      _.sequence()
+      _.map(({ result: { data } }) => data),
+      _.sequence(),
     );
 
     let rawStream = messageStream.pipe(through);
 
-    messageStream.on('error', (e) => {
+    messageStream.on('error', e => {
       rawStream.emit('error', new Error(e));
     });
 
     return rawStream;
-  };
+  }
 
   /**
    * Execute the script and return a stream of raw messages returned by Gremlin
@@ -320,13 +334,13 @@ class GremlinClient extends EventEmitter {
 
     const command = {
       message: this.buildMessage(script, bindings, rawMessage),
-      messageStream: stream
+      messageStream: stream,
     };
 
     this.sendCommand(command); //todo improve for streams
 
     return stream;
-  };
+  }
 
   /**
    * Send a command to Gremlin Server, or add it to queue if the connection
@@ -335,12 +349,7 @@ class GremlinClient extends EventEmitter {
    * @param {Object} command
    */
   sendCommand(command) {
-    const {
-      message,
-      message: {
-        requestId
-      }
-    } = command;
+    const { message, message: { requestId } } = command;
 
     this.commands[requestId] = command;
 
@@ -349,7 +358,7 @@ class GremlinClient extends EventEmitter {
     } else {
       this.queue.push(command);
     }
-  };
+  }
 
   traversalSource() {
     const { g } = gremlin;
@@ -359,15 +368,16 @@ class GremlinClient extends EventEmitter {
     const awaitable = new Proxy(g, {
       get: (traversal, name, receiver) => {
         if (name === 'toPromise') {
-          return () => new Promise((resolve, reject) => {
-            const { query, params } = renderChain(chain);
-            this.execute(query, params, (err, result) => {
-              if (err) {
-                return reject(err);
-              }
-              resolve(result);
+          return () =>
+            new Promise((resolve, reject) => {
+              const { query, params } = renderChain(chain);
+              this.execute(query, params, (err, result) => {
+                if (err) {
+                  return reject(err);
+                }
+                resolve(result);
+              });
             });
-          });
         }
 
         chain = chain[name];
@@ -376,14 +386,14 @@ class GremlinClient extends EventEmitter {
           get(target2, name2, receiver2) {
             target2 = target2[name];
             return awaitable;
-          }
+          },
         })[name];
       },
       apply(traversal, thisArg, args) {
         Reflect.apply(chain, null, args);
 
         return awaitable;
-      }
+      },
     });
 
     return awaitable;

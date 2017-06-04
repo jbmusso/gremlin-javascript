@@ -1,9 +1,10 @@
 require('chai').should();
 import gremlin from './';
 
-
 describe('.stream()', function() {
-  it('should emit `data` events with a chunk of results and the raw response', function(done) {
+  it('should emit `data` events with a chunk of results and the raw response', function(
+    done,
+  ) {
     var client = gremlin.createClient();
     var s = client.stream('g.V()');
 
@@ -34,7 +35,9 @@ describe('.stream()', function() {
 
   it('should handle optional args', function(done) {
     var client = gremlin.createClient();
-    var s = client.stream('g.V(1)', null, { args: { language: 'gremlin-groovy' }});
+    var s = client.stream('g.V(1)', null, {
+      args: { language: 'gremlin-groovy' },
+    });
 
     s.on('data', function(result) {
       result.id.should.equal(1);
@@ -47,7 +50,11 @@ describe('.stream()', function() {
 
   it.skip('should handle bindings and optional args', function(done) {
     var client = gremlin.createClient();
-    var s = client.stream('g.V(xyz)', { xyz : 1 }, { args: { language: 'gremlin-groovy' }});
+    var s = client.stream(
+      'g.V(xyz)',
+      { xyz: 1 },
+      { args: { language: 'gremlin-groovy' } },
+    );
 
     s.on('data', function(result) {
       result.xyz.should.equal(1);

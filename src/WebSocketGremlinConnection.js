@@ -2,8 +2,7 @@ import { EventEmitter } from 'events';
 
 import WebSocket from 'ws';
 
-
-export default class WebSocketGremlinConnection extends EventEmitter {
+export default class WebSocketGremlinConnection extends EventEmitter {
   constructor({ port, host, path, ssl, rejectUnauthorized }) {
     super();
 
@@ -11,16 +10,16 @@ export default class WebSocketGremlinConnection extends EventEmitter {
 
     const address = `ws${ssl ? 's' : ''}://${host}:${port}${path}`;
     const options = {
-      rejectUnauthorized
+      rejectUnauthorized,
     };
 
     this.ws = new WebSocket(address, null, options);
 
     this.ws.onopen = () => this.onOpen();
-    this.ws.onerror = (err) => this.handleError(err);
-    this.ws.onmessage = (message) => this.handleMessage(message);
-    this.ws.onclose = (event) => this.onClose(event);
-    this.ws.binaryType = "arraybuffer";
+    this.ws.onerror = err => this.handleError(err);
+    this.ws.onmessage = message => this.handleMessage(message);
+    this.ws.onclose = event => this.onClose(event);
+    this.ws.binaryType = 'arraybuffer';
   }
 
   onOpen() {
@@ -42,7 +41,7 @@ export default class WebSocketGremlinConnection extends EventEmitter {
   }
 
   sendMessage(message) {
-    this.ws.send(message, { mask: true, binary: true }, (err) => {
+    this.ws.send(message, { mask: true, binary: true }, err => {
       if (err) {
         this.handleError(err);
       }
