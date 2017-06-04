@@ -90,7 +90,7 @@ describe('.createClient()', function() {
     });
   });
 
-  describe.only('Secure WebSocket', () => {
+  describe('Secure WebSocket', () => {
     it('should support secure SSL websockets', (done) => {
       const client = gremlin.createClient(8192/* start with docker-compose */, {
         ssl: true,
@@ -101,9 +101,7 @@ describe('.createClient()', function() {
       client.options.rejectUnauthorized.should.equal(false);
 
       client.execute('1+1', (err, result) => {
-        console.log(err, result)
         assert.equal(result, 2);
-        // result.should.equal("2");
         done();
       });
     });
