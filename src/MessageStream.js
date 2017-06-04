@@ -1,9 +1,8 @@
 import ReadableStream from 'readable-stream';
 
-
 class MessageStream extends ReadableStream {
   constructor(...args) {
-    super(...args)
+    super(...args);
   }
 
   _read() {

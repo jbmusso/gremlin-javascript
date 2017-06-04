@@ -2,7 +2,6 @@ require('chai').should();
 import gremlin from './';
 import { assert } from 'chai';
 
-
 describe('.createClient()', function() {
   it('should create a client with default options', function() {
     var client = gremlin.createClient();
@@ -50,15 +49,19 @@ describe('.createClient()', function() {
     client.options.accept.should.equal('application/xml');
   });
 
-  it('should support aliases', function () {
-    const client = gremlin.createClient({ aliases: {
-      h: 'g'
-    }});
+  it('should support aliases', function() {
+    const client = gremlin.createClient({
+      aliases: {
+        h: 'g',
+      },
+    });
 
     client.options.aliases.should.eql({ h: 'g' });
   });
 
-  it('should override a set `processor` option on a per request basis', function(done) {
+  it('should override a set `processor` option on a per request basis', function(
+    done,
+  ) {
     var client = gremlin.createClient({ op: 'foo' });
 
     client.port.should.equal(8182);
@@ -91,11 +94,14 @@ describe('.createClient()', function() {
   });
 
   describe('Secure WebSocket', () => {
-    it('should support secure SSL websockets', (done) => {
-      const client = gremlin.createClient(8192/* start with docker-compose */, {
-        ssl: true,
-        rejectUnauthorized: false, // using TP-dev self-signed certificate
-      });
+    it('should support secure SSL websockets', done => {
+      const client = gremlin.createClient(
+        8192 /* start with docker-compose */,
+        {
+          ssl: true,
+          rejectUnauthorized: false, // using TP-dev self-signed certificate
+        },
+      );
 
       client.options.ssl.should.equal(true);
       client.options.rejectUnauthorized.should.equal(false);
@@ -107,4 +113,3 @@ describe('.createClient()', function() {
     });
   });
 });
-
