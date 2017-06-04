@@ -16,7 +16,7 @@ cache:
   yarn: true
 
 before_install:
-  - docker-compose up
+  - docker-compose up -d
 
 install:
   - yarn
