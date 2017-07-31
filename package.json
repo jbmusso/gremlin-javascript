@@ -1,10 +1,11 @@
 {
   "name": "gremlin",
-  "version": "2.3.3",
+  "version": "2.5.1",
   "description": "JavaScript client for TinkerPop3 Gremlin Server",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel ./src -d lib",
+    "prebuild": "rimraf ./lib",
+    "build": "babel ./src -d lib --ignore '**/*.test.js'",
     "build:umd": "NODE_ENV=production webpack src/index.js umd/gremlin.js",
     "build:min": "NODE_ENV=production webpack -p src/index.js umd/gremlin.min.js",
     "build:watch": "npm run build -- --watch",
@@ -12,8 +13,8 @@
     "coverage:travis": "babel-node ./node_modules/istanbul/lib/cli.js cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "examples:browser": "babel-node examples/server",
     "examples:node": "babel-node examples/node-example",
-    "test:node": "mocha ./test --compilers js:babel-register --recursive --reporter spec",
-    "test:node:watch": "npm run test:node -- --watch"
+    "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 mocha $(find src -path '*test.js') --compilers js:babel-register --recursive --reporter spec",
+    "test:watch": "npm run test -- --watch"
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "babel-core": "^6.4.0",
     "babel-loader": "^6.2.1",
     "babel-plugin-transform-async-to-module-method": "^6.5.2",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-plugin-transform-runtime": "^6.5.2",
     "babel-preset-env": "^1.4.0",
     "babel-register": "^6.3.13",
@@ -72,6 +74,7 @@
     "karma-safari-launcher": "^0.1.1",
     "mocha": "^1.21.4",
     "mocha-lcov-reporter": "^1.2.0",
+    "rimraf": "^2.6.1",
     "serve-static": "^1.5.3",
     "vinyl-source-stream": "^1.0.0",
     "webpack": "^1.12.11",

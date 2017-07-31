@@ -1,4 +1,5 @@
-import gremlin from '../';
+require('chai').should();
+import gremlin from './';
 
 
 describe('.messageStream', function() {
