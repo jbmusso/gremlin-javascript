@@ -90,9 +90,9 @@ The `options` object currently allows you to set the following options:
 * `accept` (advanced usage): mime type of returned responses, depending on the serializer (default: `"application/json"`)
 * `path`: a custom URL connection path if connecting to a Gremlin server behind a WebSocket proxy
 * `ssl`: whether to use secure WebSockets or not (default: `false`)
+$ `rejectUnauthorized`: when using ssl, whether to reject self-signed certificates or not (default: `true`). Useful in development mode when using gremlin-server self signed certificates. Do NOT use self-signed certificates with this option in production.
 * `user` : username to use for SASL authentication
 * `password` : password to use for SASL authentication
-$ `rejectUnauthorized`: when using ssl, whether to reject self-signed certificates or not (default: `true`). Useful in development mode when using gremlin-server self signed certificates. Do NOT use self-signed certificates with this option in production.
 
 ## Using SASL Authentication
 
