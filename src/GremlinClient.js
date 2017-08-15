@@ -6,6 +6,7 @@ import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
 import { gremlin, renderChain } from 'zer';
+import utf8 from 'utf8';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
@@ -228,7 +229,6 @@ class GremlinClient extends EventEmitter {
 
   buildChallengeResponse(requestId) {
     const { processor, op, accept, language, aliases } = this.options;
-    var utf8 = require('utf8');
     var args = { SASL: utf8.encode('\0' + this.user + '\0' + this.password) };
     
     const message = {
