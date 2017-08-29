@@ -1,3 +1,6 @@
+## 2.6.0
+- Add support for SASL authentication (thanks CosmosDB team)
+
 ## 2.5.1
 - Push properly built files
 
