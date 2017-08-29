@@ -9,12 +9,13 @@ import { gremlin, renderChain } from 'zer';
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import * as Utils from './utils';
 
-import Rx from 'rx';
+import Rx from 'rxjs';
+import './pausableBuffered';
 
+const hasCode = filterCode => ({ status: { code } }) => code === filterCode;
 
-const hasCode = (filterCode) => ({ status: { code } }) => code === filterCode;
-
-const isErrorMessage = ({ status: { code }}) => [200, 204, 206].indexOf(code) === -1;
+const isErrorMessage = ({ status: { code } }) =>
+  [200, 204, 206].indexOf(code) === -1;
 
 const serializeToBinary = (message, accept) => {
   let serializedMessage = accept + JSON.stringify(message);
@@ -30,7 +31,7 @@ const serializeToBinary = (message, accept) => {
   }
 
   return binaryMessage;
-}
+};
 
 class GremlinClient extends EventEmitter {
   constructor(port = 8182, host = 'localhost', options = {}) {
@@ -67,9 +68,9 @@ class GremlinClient extends EventEmitter {
     this.commands = {};
 
     this.commands$ = new Rx.Subject();
-    this.commands$.subscribe((command) => {
+    this.commands$.subscribe(command => {
       const { message: { requestId } } = command;
-      this.commands[requestId] = command
+      this.commands[requestId] = command;
     });
 
     const { ssl, rejectUnauthorized } = this.options;
@@ -79,55 +80,64 @@ class GremlinClient extends EventEmitter {
       host,
       path: this.options.path,
       ssl,
-      rejectUnauthorized,      
+      rejectUnauthorized,
     });
 
-    const connections$ = Rx.Observable.create((observer) => observer.next(connection));
+    const connections$ = Rx.Observable.create(observer =>
+      observer.next(connection),
+    );
 
-    const open$ = connections$
-      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'open'));
+    const open$ = connections$.flatMap(connection =>
+      Rx.Observable.fromEvent(connection, 'open'),
+    );
 
-    const error$ = connections$
-      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'error'));
+    const error$ = connections$.flatMap(connection =>
+      Rx.Observable.fromEvent(connection, 'error'),
+    );
 
     const incomingMessages$ = connections$
-      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'message'))
+      .flatMap(connection => Rx.Observable.fromEvent(connection, 'message'))
       .map(({ data }) => {
         const buffer = new Buffer(data, 'binary');
         const rawMessage = JSON.parse(buffer.toString('utf-8'));
 
         return rawMessage;
       });
-    const close$ = connections$
-      .flatMap((connection) => Rx.Observable.fromEvent(connection, 'close'));
+    const close$ = connections$.flatMap(connection =>
+      Rx.Observable.fromEvent(connection, 'close'),
+    );
 
     const canSend$ = Rx.Observable.merge(
-      open$.map(true),
-      error$.map(false),
-      close$.map(false)
-    )
+      open$.mapTo(true),
+      error$.mapTo(false),
+      close$.mapTo(false),
+    );
 
-    open$.subscribe((connection) => this.onConnectionOpen());
-    error$.subscribe((error) => this.handleError(error));
-
+    open$.subscribe(connection => this.onConnectionOpen());
+    error$.subscribe(error => this.handleError(error));
 
     this.incomingMessages$ = incomingMessages$;
 
-    close$.subscribe((event) => this.handleDisconnection(event));
+    close$.subscribe(event => this.handleDisconnection(event));
 
     const outgoingMessages$ = this.commands$
       .map(({ message }) => serializeToBinary(message, this.options.accept))
       .pausableBuffered(canSend$)
       .combineLatest(connections$);
 
-    outgoingMessages$
-      .subscribe(([binaryMessage, connection]) =>
-        connection.sendMessage(binaryMessage)
-      );
+    outgoingMessages$.subscribe(([binaryMessage, connection]) =>
+      connection.sendMessage(binaryMessage),
+    );
   }
 
   createConnection({ port, host, path, ssl, rejectUnauthorized }) {
-    return new WebSocketGremlinConnection({ port, host, path, ssl, rejectUnauthorized });
+    return new WebSocketGremlinConnection({
+      port,
+      host,
+      path,
+      ssl,
+      rejectUnauthorized,
+    });
   }
 
   closeConnection() {
@@ -153,7 +163,7 @@ class GremlinClient extends EventEmitter {
   onConnectionOpen() {
     this.connected = true;
     this.emit('connect');
-  };
+  }
 
   /**
    * @param {CloseEvent} event
@@ -241,58 +251,56 @@ class GremlinClient extends EventEmitter {
 
     this.observable(script, bindings, message)
       .toArray()
-      .subscribe(
-        (results) => callback(null, results),
-        (err) => callback(err)
-      )
+      .subscribe(results => callback(null, results), err => callback(err));
   }
 
   messageObservable(script, bindings, rawMessage) {
     const command = {
       message: this.buildMessage(script, bindings, rawMessage),
-    }
+    };
 
     // This actually sends the command to Gremlin Server
-    this.commands$.onNext(command);
+    this.commands$.next(command);
 
     // Create a new Observable of of incoming messages, but filter only
     // incoming messages to the command we just send.
-    const commandMessages$ = this.incomingMessages$
-      .filter(({ requestId }) => requestId === command.message.requestId);
+    const commandMessages$ = this.incomingMessages$.filter(
+      ({ requestId }) => requestId === command.message.requestId,
+    );
 
     // Off of these messages, create new Observables for each message code
     // TODO: this could be a custom operator.
-    const successMessage$ = commandMessages$
-      .filter(hasCode(200))
-    const continuationMessages$ = commandMessages$
-      .filter(hasCode(206))
+    const successMessage$ = commandMessages$.filter(hasCode(200));
+    const continuationMessages$ = commandMessages$.filter(hasCode(206));
     const noContentMessage$ = commandMessages$
       .filter(hasCode(204))
       // Rewrite these in order to ensure the callback is always fired with an
       // Empty Array rather than a null value.
       // Mutating is perfectly fine here.
-      .map((message) => {
-        message.result.data = []
+      .map(message => {
+        message.result.data = [];
         return message;
       });
 
     // That Observable will ultimately emit a single object which indicates
     // that we should not expect any other messages;
     const terminationMessages$ = Rx.Observable.merge(
-      successMessage$, noContentMessage$
+      successMessage$,
+      noContentMessage$,
     );
 
     const errorMessages$ = commandMessages$
       .filter(isErrorMessage)
       .flatMap(({ status: { code, message } }) =>
-        Rx.Observable.throw(new Error(message + ' (Error '+ code +')'))
+        Rx.Observable.throw(new Error(message + ' (Error ' + code + ')')),
       );
 
-    const results$ = Rx.Observable.merge(
+    const results$ = Rx.Observable
+      .merge(
         successMessage$,
         continuationMessages$,
         noContentMessage$,
-        errorMessages$
+        errorMessages$,
       )
       .takeUntil(terminationMessages$);
 
@@ -300,8 +308,9 @@ class GremlinClient extends EventEmitter {
   }
 
   observable(script, bindings, rawMessage) {
-    return this.messageObservable(script, bindings, rawMessage)
-      .flatMap(({ result: { data }}) => data)
+    return this.messageObservable(script, bindings, rawMessage).flatMap(
+      ({ result: { data } }) => data,
+    );
   }
 }
 
