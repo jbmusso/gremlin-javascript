@@ -91,6 +91,26 @@ The `options` object currently allows you to set the following options:
 * `path`: a custom URL connection path if connecting to a Gremlin server behind a WebSocket proxy
 * `ssl`: whether to use secure WebSockets or not (default: `false`)
 $ `rejectUnauthorized`: when using ssl, whether to reject self-signed certificates or not (default: `true`). Useful in development mode when using gremlin-server self signed certificates. Do NOT use self-signed certificates with this option in production.
+* `user` : username to use for SASL authentication
+* `password` : password to use for SASL authentication
+
+## Using SASL Authentication
+
+If you want to use [SASL Authentication] (http://tinkerpop.apache.org/docs/3.2.5/dev/provider/#_authentication) with your gremlin server:
+
+```javascript
+import { createClient } from 'gremlin';
+
+const client = Gremlin.createClient(8182, 'localhost', { ssl:true, user:'user', password:'password' });
+
+client.execute('g.V()', { }, (err, results) => {
+  if (err) {
+    return console.error(err)
+  }
+
+  console.log(results);
+});
+```
 
 ### Executing Gremlin queries
 

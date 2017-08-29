@@ -6,6 +6,7 @@ import uuid from 'node-uuid';
 import _ from 'lodash';
 import highland from 'highland';
 import { gremlin, renderChain } from 'zer';
+import utf8 from 'utf8';
 
 import WebSocketGremlinConnection from './WebSocketGremlinConnection';
 import MessageStream from './MessageStream';
@@ -33,11 +34,15 @@ class GremlinClient extends EventEmitter {
       executeHandler,
       ssl: false,
       rejectUnauthorized: true,
+      user: '',
+      password: '',
       ...options,
-      path: path.length && !path.startsWith('/') ? `/${path}` : path
+      path: path && path.length && !path.startsWith('/') ? `/${path}` : path
     }
 
     this.useSession = this.options.session;
+    this.user = this.options.user;
+    this.password = this.options.password;
 
     if (this.useSession) {
       this.sessionId = uuid.v1();
@@ -128,6 +133,10 @@ class GremlinClient extends EventEmitter {
       case 206: // PARTIAL_CONTENT
         messageStream.push(rawMessage);
         break;
+      case 407: // AUTHENTICATE CHALLANGE
+        const challengeResponse = this.buildChallengeResponse(requestId);
+        this.sendMessage(challengeResponse);
+        break;
       default:
         delete this.commands[requestId];
         messageStream.emit('error', new Error(statusMessage + ' (Error '+ statusCode +')'));
@@ -214,6 +223,20 @@ class GremlinClient extends EventEmitter {
       message.processor = message.processor || processor || 'session';
       message.args.session = this.sessionId;
     }
+
+    return message;
+  };
+
+  buildChallengeResponse(requestId) {
+    const { processor, op, accept, language, aliases } = this.options;
+    var args = { SASL: utf8.encode('\0' + this.user + '\0' + this.password) };
+    
+    const message = {
+      requestId: requestId,
+      processor,
+      op: 'authentication',
+      args
+    };
 
     return message;
   };
