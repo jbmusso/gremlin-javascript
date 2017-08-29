@@ -421,6 +421,22 @@ class GremlinClient extends EventEmitter {
 
     return awaitable;
   }
+
+  /**
+   * Terminate WebSocket Connection after make sure all commands have been
+   * Executed Successfully.
+   */
+  terminate() {
+    let commands = this.commands;
+    let connection = this.connection;
+    setInterval(function(){
+      if(Object.keys(commands).length === 0) {
+        this.connected = false;
+        connection.terminate();
+        clearInterval(this);
+      }
+    }, 100);
+  }
 }
 
 export default GremlinClient;
