@@ -1,0 +1,9 @@
+{
+  "name": "tinkergraph",
+  "version": "1.0.0",
+  "description": "A JavaScript in-memory graph structure/database",
+  "main": "lib/index.js",
+  "repository": "https://github.com/jbmusso/gremlin-javascript",
+  "author": "Jean-Baptiste Musso <jbmusso+github@gmail.com>",
+  "license": "MIT"
+}

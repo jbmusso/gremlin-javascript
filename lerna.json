@@ -1,0 +1,10 @@
+{
+  "lerna": "2.1.2",
+  "packages": [
+    "gremlin-client",
+    "tinkergraph",
+    "traversal-machine"
+  ],
+  "version": "independent",
+  "npmClient": "yarn"
+}
