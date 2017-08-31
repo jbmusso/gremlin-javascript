@@ -16,8 +16,8 @@ cache:
   yarn: true
 
 before_install:
-  - docker-compose up -d
   - cd gremlin-client
+  - docker-compose up -d
 
 install:
   - yarn
