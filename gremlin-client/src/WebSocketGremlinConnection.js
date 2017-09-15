@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 
 import WebSocket from 'ws';
+import Url from 'url';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 export default class WebSocketGremlinConnection extends EventEmitter {
   constructor({ port, host, path, ssl, rejectUnauthorized }) {
@@ -13,7 +15,15 @@ export default class WebSocketGremlinConnection extends EventEmitter {
       rejectUnauthorized,
     };
 
-    this.ws = new WebSocket(address, null, options);
+    var proxy = process.env.http_proxy;
+    var agent_options = null;
+    var custom_agent = null;
+    if (proxy) {
+      agent_options = Url.parse(proxy);
+      var agent = new HttpsProxyAgent(agent_options);
+      custom_agent = { agent: agent };
+    }
+    this.ws = new WebSocket(address, custom_agent, options);
 
     this.ws.onopen = () => this.onOpen();
     this.ws.onerror = err => this.handleError(err);
