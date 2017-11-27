@@ -34,7 +34,11 @@ export default class WebSocketGremlinConnection extends EventEmitter {
   handleMessage(message) {
     this.emit('message', message);
   }
-
+  
+  close() {
+    this.ws.terminate();
+  }
+  
   onClose(event) {
     this.open = false;
     this.emit('close', event);
