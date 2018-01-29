@@ -2,6 +2,8 @@ require('chai').should();
 import { createClient, makeTemplateTag } from './';
 import { assert } from 'chai';
 
+import { get } from 'lodash';
+
 const client = createClient();
 const gremlin = makeTemplateTag(client);
 
@@ -19,7 +21,7 @@ describe('Template tag', () => {
     const [vertex] = vertices;
 
     assert.lengthOf(vertices, 1);
-    assert.equal(vertex.id, id);
+    assert.equal(get(vertex, '["@value"].id["@value"]') || vertex.id, id);
 
     done();
   });
@@ -31,8 +33,9 @@ describe('Template tag', () => {
     const [v1, v2] = vertices;
 
     assert.lengthOf(vertices, 2);
-    assert.equal(v1.id, ids[0]);
-    assert.equal(v2.id, ids[1]);
+
+    assert.equal(get(v1, '["@value"].id["@value"]') || v1.id, ids[0]);
+    assert.equal(get(v2, '["@value"].id["@value"]') || v2.id, ids[1]);
 
     done();
   });

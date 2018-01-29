@@ -2,6 +2,8 @@ require('chai').should();
 import { assert } from 'chai';
 import gremlin, { statics } from './';
 
+import { get } from 'lodash';
+
 describe('.execute()', function() {
   it('should return a result and a response', function(done) {
     var client = gremlin.createClient();
@@ -75,7 +77,8 @@ describe('.execute()', function() {
     client.execute(query, (err, result) => {
       (err === null).should.be.true;
       result.length.should.equal(1);
-      result[0].id.should.equal(1);
+      const id = get(result[0], '["@value"].id["@value"]') || result[0].id;
+      id.should.equal(1);
       done();
     });
   });
@@ -92,8 +95,10 @@ describe('.execute()', function() {
     client.execute(query, { second: 2 }, (err, result) => {
       (err === null).should.be.true;
       result.length.should.equal(2);
-      result[0].id.should.equal(1);
-      result[1].id.should.equal(2);
+      const id1 = get(result[0], '["@value"].id["@value"]') || result[0].id;
+      const id2 = get(result[1], '["@value"].id["@value"]') || result[1].id;
+      id1.should.equal(1);
+      id2.should.equal(2);
       done();
     });
   });
@@ -109,9 +114,7 @@ describe('.execute()', function() {
     });
   });
 
-  it('should fire the callback with an empty array when handling a 204 NO_CONTENT code', function(
-    done,
-  ) {
+  it('should fire the callback with an empty array when handling a 204 NO_CONTENT code', function(done) {
     // @see https://github.com/jbmusso/gremlin-javascript/issues/17
     var client = gremlin.createClient();
     var script = 'g.V().limit(0)';
@@ -197,7 +200,11 @@ describe('.execute()', function() {
     const g = client.traversalSource();
     const { both } = statics;
 
-    const results = await g.V().repeat(both('created')).times(2).toPromise();
+    const results = await g
+      .V()
+      .repeat(both('created'))
+      .times(2)
+      .toPromise();
     assert.equal(results.length, 16);
   });
 });

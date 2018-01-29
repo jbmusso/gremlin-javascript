@@ -59,9 +59,7 @@ describe('.createClient()', function() {
     client.options.aliases.should.eql({ h: 'g' });
   });
 
-  it('should override a set `processor` option on a per request basis', function(
-    done,
-  ) {
+  it('should override a set `processor` option on a per request basis', function(done) {
     var client = gremlin.createClient({ op: 'foo' });
 
     client.port.should.equal(8182);

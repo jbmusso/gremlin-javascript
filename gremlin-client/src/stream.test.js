@@ -1,10 +1,9 @@
 require('chai').should();
 import gremlin from './';
+import { get } from 'lodash';
 
 describe('.stream()', function() {
-  it('should emit `data` events with a chunk of results and the raw response', function(
-    done,
-  ) {
+  it('should emit `data` events with a chunk of results and the raw response', function(done) {
     var client = gremlin.createClient();
     var s = client.stream('g.V()');
 
@@ -25,7 +24,8 @@ describe('.stream()', function() {
     var s = client.stream('g.V(x)', { x: 1 });
 
     s.on('data', function(result) {
-      result.id.should.equal(1);
+      const id = get(result, '["@value"].id["@value"]') || result.id;
+      id.should.equal(1);
     });
 
     s.on('end', function() {
@@ -40,7 +40,8 @@ describe('.stream()', function() {
     });
 
     s.on('data', function(result) {
-      result.id.should.equal(1);
+      const id = get(result, '["@value"].id["@value"]') || result.id;
+      id.should.equal(1);
     });
 
     s.on('end', function() {
