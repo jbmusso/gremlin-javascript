@@ -9,7 +9,15 @@ describe('.messageStream', function() {
 
     s.on('data', function(message) {
       message.status.code.should.be.within(200, 206);
-      message.result.data.should.be.an('array');
+      const { data } = message.result;
+
+      if (data['@type']) {
+        // tinkerpop 3.3
+        data['@value'].should.be.an('array');
+      } else {
+        // tinkerpop 3.2
+        data.should.be.an('array');
+      }
     });
 
     s.on('end', function() {

@@ -218,6 +218,7 @@ class GremlinClient extends EventEmitter {
       rawScript,
       rawBindings,
     );
+
     const { processor, op, accept, language, aliases } = this.options;
 
     const baseArgs = { gremlin, bindings, accept, language, aliases };
@@ -242,8 +243,10 @@ class GremlinClient extends EventEmitter {
 
   buildChallengeResponse(requestId) {
     const { processor, op, accept, language, aliases } = this.options;
-    var saslbase64 = new Buffer('\0' + this.user + '\0' + this.password).toString('base64');
-    var args = { sasl: saslbase64 }
+    var saslbase64 = new Buffer(
+      '\0' + this.user + '\0' + this.password,
+    ).toString('base64');
+    var args = { sasl: saslbase64 };
 
     const message = {
       requestId: requestId,
@@ -324,7 +327,7 @@ class GremlinClient extends EventEmitter {
     // Create a local highland 'through' pipeline so we don't expose
     // a Highland stream to the end user, but a standard Node.js Stream2
     const through = _.pipeline(
-      _.map(({ result: { data } }) => data),
+      _.map(({ result: { data } }) => data['@value'] || data),
       _.sequence(),
     );
 
