@@ -2,7 +2,7 @@
 /*jslint node: true */
 import { EventEmitter } from 'events';
 
-import uuid from 'node-uuid';
+import uuidV1 from 'uuid/v1';
 import _ from 'lodash';
 import highland from 'highland';
 import { gremlin, renderChain } from 'zer';
@@ -43,7 +43,7 @@ class GremlinClient extends EventEmitter {
     this.password = this.options.password;
 
     if (this.useSession) {
-      this.sessionId = uuid.v1();
+      this.sessionId = uuidV1();
     }
 
     this.connected = false;
@@ -225,7 +225,7 @@ class GremlinClient extends EventEmitter {
     const args = _.defaults(baseMessage.args || {}, baseArgs);
 
     const message = {
-      requestId: uuid.v1(),
+      requestId: uuidV1(),
       processor,
       op,
       args,
