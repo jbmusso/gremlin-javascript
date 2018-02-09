@@ -20,7 +20,7 @@
     "test:watch": "npm run test -- --watch"
   },
   "lint-staged": {
-    "gitDir": "../",    
+    "gitDir": "../",
     "*.js": [
       "npm run prettify",
       "git add"
@@ -47,8 +47,8 @@
     "gremlin-template-string": "^2.0.0",
     "highland": "^2.5.1",
     "lodash": "^3.10.1",
-    "node-uuid": "^1.4.3",
     "readable-stream": "^2.0.2",
+    "uuid": "^3.2.1",
     "ws": "^2.3.1",
     "zer": "^0.1.0"
   },
