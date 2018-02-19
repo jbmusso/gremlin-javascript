@@ -1,5 +1,5 @@
 require('chai').should();
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import gremlin, { statics } from './';
 
 import { get } from 'lodash';
@@ -110,6 +110,8 @@ describe('.execute()', function() {
 
     client.execute(script, function(err, result) {
       (err === null).should.be.false;
+      expect(err.rawMessage).to.have.property('status');
+      expect(err.rawMessage).to.have.property('requestId');
       done();
     });
   });

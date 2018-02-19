@@ -146,10 +146,9 @@ class GremlinClient extends EventEmitter {
         break;
       default:
         delete this.commands[requestId];
-        messageStream.emit(
-          'error',
-          new Error(statusMessage + ' (Error ' + statusCode + ')'),
-        );
+        const error = new Error(statusMessage + ' (Error ' + statusCode + ')');
+        error.rawMessage = rawMessage;
+        messageStream.emit('error', error);
         break;
     }
   }
