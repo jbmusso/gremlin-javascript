@@ -1,5 +1,6 @@
 {
 	"devDependencies": {
-		"lerna": "^2.1.2"
+		"lerna": "^2.1.2",
+		"prettier": "^1.11.1"
 	}
 }
