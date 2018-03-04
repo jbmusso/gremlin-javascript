@@ -4,7 +4,7 @@
     "no-use-before-declare": false,
     "semicolon": [true, "always"],
     "space-before-function-paren": false,
-    "trailing-comma": [true, { "multiline": "always", "singleline": "never" }],
+    "trailing-comma": [false, { "multiline": "always", "singleline": "never" }],
     "variable-name": false
   }
 }
