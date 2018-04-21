@@ -5,10 +5,14 @@ gremlin-javascript
 
 A WebSocket JavaScript client for TinkerPop3 Gremlin Server. Works in Node.js and modern browsers.
 
+## DEPRECATION NOTICE
+
+This project has been superseded by the [official TinkerPop JavaScript-Gremlin language variant](http://tinkerpop.apache.org/docs/current/reference/#gremlin-javascript). Please use the official package insead.
+
 ## Installation
 
 ```
-npm install gremlin --save
+npm install gremlin@2.7.0 --save
 ```
 
 ## Quick start
